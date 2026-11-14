@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fran Rochas | Selected Works</title>
+
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Three.js (Para la Esfera 3D del Proyecto 01) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+        }
+
+        /* MENÚ FLOTANTE */
+        .main-nav {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            z-index: 1000 !important;
+            padding: 35px 20px 20px 20px !important;
+            display: flex !important;
+            justify-content: center !important;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%) !important;
+            pointer-events: auto;
+        }
+
+        .main-nav ul {
+            display: flex !important;
+            list-style: none !important;
+            gap: 25px !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .main-nav a {
+            position: relative !important;
+            display: inline-block !important;
+            padding: 6px 12px !important;
+            text-decoration: none !important;
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-size: 0.80rem !important;
+            font-weight: 500 !important;
+            letter-spacing: 2px !important;
+            text-transform: uppercase !important;
+            color: #ffffff !important;
+            background: transparent !important;
+        }
+
+        .main-nav a span {
+            color: #ffffff !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-nav a:hover span,
+        .main-nav a.active span {
+            color: #000000 !important;
+        }
+
+        .main-nav a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background-color: #ffffff;
+            z-index: 1;
+            transition: height 0.25s ease;
+        }
+
+        .main-nav a:hover::before,
+        .main-nav a.active::before {
+            height: 100%;
+        }
+
+        /* CONTENEDOR SLIDER FULL-SCREEN */
+        .work-fullscreen-container {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .work-fullscreen-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* TARJETA PROYECTO */
+        .project-slide {
+            width: 100vw;
+            height: 100vh;
+            scroll-snap-align: start;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        /* CAPA DE IMAGEN ESTÁNDAR */
+        .project-bg {
+            position: absolute;
+            top: -6%;
+            left: 0;
+            width: 100%;
+            height: 112%;
+            z-index: 1;
+            will-change: transform;
+        }
+
+        .project-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.75) contrast(1.08);
+            transition: transform 0.8s ease-out;
+        }
+
+        .project-slide:hover .project-bg img {
+            transform: scale(1.015);
+        }
+
+        /* ESCENA MULTICAPA 2.5D / 3D */
+        .parallax-scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+            perspective: 1200px;
+        }
+
+        .layer-bg {
+            position: absolute;
+            top: -12%;
+            left: -5%;
+            width: 110%;
+            height: 124%;
+            z-index: 1;
+            will-change: transform;
+            transition: transform 0.15s ease-out;
+        }
+
+        .layer-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.68) contrast(1.12);
+        }
+
+        /* CANVAS WEBGL PARA LA ESFERA (01) */
+        .webgl-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 5;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* CAPA ELEMENTO DELANTERO 2.5D */
+        .layer-fg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            will-change: transform;
+            pointer-events: none;
+            transition: transform 0.12s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        /* BALLENA REAL (PROYECTO 02) */
+        .layer-fg.whale-layer img {
+            max-width: 86%;
+            max-height: 86%;
+            object-fit: contain;
+            filter: brightness(1.15) drop-shadow(0 35px 65px rgba(0, 0, 0, 0.95));
+            animation: whaleFloat 5.5s ease-in-out infinite alternate;
+        }
+
+        /* ANILLO REAL (PROYECTO 18) */
+        .layer-fg.ring-layer img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            filter: brightness(1.18) contrast(1.1) drop-shadow(0 40px 70px rgba(0, 0, 0, 0.95));
+            animation: ringFloat 6.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes whaleFloat {
+            0% { transform: translateY(-22px) rotate(-1.5deg) scale(0.99); }
+            50% { transform: translateY(0px) rotate(0.2deg) scale(1.01); }
+            100% { transform: translateY(24px) rotate(1.8deg) scale(1.03); }
+        }
+
+        @keyframes ringFloat {
+            0% { transform: translateY(-24px) rotate(-3deg) scale(0.98); }
+            50% { transform: translateY(6px) rotate(1deg) scale(1.02); }
+            100% { transform: translateY(24px) rotate(3deg) scale(1.05); }
+        }
+
+        /* INFO SOBREPUESTA */
+        .project-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 60px 80px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0) 100%);
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-end;
+            will-change: transform;
+        }
+
+        .project-meta {
+            max-width: 950px;
+        }
+
+        .project-index {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .project-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 3.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            line-height: 1.02;
+            margin-bottom: 12px;
+            color: #ffffff;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .project-category {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.90rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        /* INDICADOR LATERAL */
+        .slide-indicator {
+            position: fixed;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .indicator-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .indicator-dot.active {
+            background: #ffffff;
+            transform: scale(1.6);
+        }
+
+        @media (max-width: 768px) {
+            .main-nav { padding: 20px 10px 10px 10px !important; }
+            .main-nav ul { gap: 10px !important; }
+            .main-nav a { padding: 4px 6px !important; font-size: 0.60rem !important; }
+            .project-content { padding: 40px 20px; }
+            .project-title { font-size: 2rem; }
+            .project-category { font-size: 0.70rem; }
+            .slide-indicator { right: 15px; gap: 6px; }
+            .indicator-dot { width: 5px; height: 5px; }
+            .project-bg, .layer-bg { top: 0; height: 100%; }
+            .layer-fg img { max-width: 95%; animation: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ FLOTANTE -->
+    <nav class="main-nav">
+        <ul>
+            <li><a href="index.html"><span>HOME</span></a></li>
+            <li><a href="work.html" class="active"><span>WORK</span></a></li>
+            <li><a href="behind-the-scenes.html"><span>BEHIND THE SCENES</span></a></li>
+            <li><a href="ai-filmmaker.html"><span>A.I. FILMMAKER</span></a></li>
+            <li><a href="about3D/about.html"><span>ABOUT</span></a></li>
+            <li><a href="contact.html"><span>CONTACT</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- INDICADOR LATERAL -->
+    <div class="slide-indicator" id="slide-indicator"></div>
+
+    <!-- CONTENEDOR FULL-SCREEN -->
+    <main class="work-fullscreen-container" id="scroll-container">
+        
+        <!-- PROYECTO 01: REPSOL 2012 (Three.js Esfera 3D) -->
+        <section class="project-slide">
+            <div class="parallax-scene">
+                <div class="layer-bg" id="sphere-bg">
+                    <img src="REPSOL_2012_FONDO.jpg" alt="Escenario Repsol 2012">
+                </div>
+                <canvas id="sphere-3d-canvas" class="webgl-canvas"></canvas>
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">01 / 20</span>
+                    <h2 class="project-title">REPSOL CONVENTION</h2>
+                    <p class="project-category">LARGE SCALE DIGITAL SCENOGRAPHY - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 02: REPSOL 2014 (BALLENA REAL) -->
+        <section class="project-slide">
+            <div class="parallax-scene">
+                <div class="layer-bg" id="stage-bg">
+                    <img src="REPSOL_2014_fondo.jpg" alt="Escenario Repsol 2014">
+                </div>
+                <div class="layer-fg whale-layer" id="whale-fg">
+                    <img src="REPSOL_2014_ballena.png" alt="Ballena Real Flotante">
+                </div>
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">02 / 20</span>
+                    <h2 class="project-title">REPSOL CONVENTION</h2>
+                    <p class="project-category">LARGE SCALE DIGITAL SCENOGRAPHY - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 03: REPSOL 2011 -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="REPSOL_2011_2.jpg" alt="Repsol Communication Convention">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">03 / 20</span>
+                    <h2 class="project-title">REPSOL CONVENTION</h2>
+                    <p class="project-category">LARGE SCALE DIGITAL MAPPING SCENOGRAPHY - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 04: SANTALUCÍA 2021 -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="SANTALUCIA.jpg" alt="Santalucía Virtual Stage Experience">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">04 / 20</span>
+                    <h2 class="project-title">SANTALUCÍA CONVENTION</h2>
+                    <p class="project-category">VIRTUAL STAGE - HYBRID EVENT &amp; UNREAL ENGINE SYSTEM - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 05: REPSOL 2013 -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="REPSOL_2013.jpg" alt="Repsol Interactive Stage">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">05 / 20</span>
+                    <h2 class="project-title">REPSOL CONVENTION</h2>
+                    <p class="project-category">MEDIA EXPERIENCE - IMMERSIVE STAGE ENVIRONMENT - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 06: PEUGEOT -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="PEUGEOT.jpg" alt="Peugeot Automotive Launch">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">06 / 20</span>
+                    <h2 class="project-title">PEUGEOT PRESENTATION PRODUCT LAUNCH</h2>
+                    <p class="project-category">LIVE PAINTING &amp; PROJECTION MAPPING - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 07: BMW -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="BMW_3.jpg" alt="BMW Brand Launch">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">07 / 20</span>
+                    <h2 class="project-title">BMW AUTOMOTIVE CONVENTION</h2>
+                    <p class="project-category">ROBOTIC SCREEN CHOREOGRAPHY - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 08: ROSHN -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="ROSHN_.jpg" alt="Roshn Real Estate Experience">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">08 / 20</span>
+                    <h2 class="project-title">ROSHN IMMERSIVE EXPERIENCE</h2>
+                    <p class="project-category">PRIME-TIME AR COMMERCIAL - SAUDI ARABIA</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 09: IQOS 3 -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="IQOS3_2.jpg" alt="IQOS 3 Product Launch">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">09 / 20</span>
+                    <h2 class="project-title">IQOS 3 PRODUCT LAUNCH</h2>
+                    <p class="project-category">EXPERIENTIAL PRODUCT PRESENTATION &amp; BRAND EVENT - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 10: ALCORCÓN MAPPING -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="MAPPING ALCORCON.jpg" alt="Alcorcón Architectural Video Mapping">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">10 / 20</span>
+                    <h2 class="project-title">ALCORCÓN MONUMENTAL MAPPING</h2>
+                    <p class="project-category">ARCHITECTURAL MAPPING &amp; IMMERSIVE AUDIOVISUALS</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 11: NCB VIENA -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="NCB_VIENA_3.jpg" alt="National Commercial Bank of Saudi Arabia Vienna">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">11 / 20</span>
+                    <h2 class="project-title">NATIONAL COMMERCIAL BANK OF SAUDI ARABIA</h2>
+                    <p class="project-category">GALA DINNER &amp; MAPPING SCENOGRAPHY - VIENA</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 12: NCB MNAC -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="NCB_MNAC.jpg" alt="National Commercial Bank of Saudi Arabia Barcelona">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">12 / 20</span>
+                    <h2 class="project-title">NATIONAL COMMERCIAL BANK OF SAUDI ARABIA</h2>
+                    <p class="project-category">MAPPING SCENOGRAPHY &amp; CORPORATE GALA - BARCELONA</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 13: NCB ATENAS -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="NCB_ATENAS.jpg" alt="National Commercial Bank of Saudi Arabia Athens">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">13 / 20</span>
+                    <h2 class="project-title">NATIONAL COMMERCIAL BANK OF SAUDI ARABIA</h2>
+                    <p class="project-category">GALA DINNER SHOW: LARGE-SCALE PROJECTION MAPPING OVER MOUNTAIN AND WATER - ATHENS</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 14: REPSOL QUÍMICA -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="REPSOL_QUIMICA.jpg" alt="Repsol Convention">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">14 / 20</span>
+                    <h2 class="project-title">REPSOL CONVENTION</h2>
+                    <p class="project-category">CORPORATE EVENT &amp; KINETIC SCENOGRAPHY - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 15: IBERJOYA 2008 -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="IBERJOYA_2008.jpg" alt="Iberjoya High-Jewelry Runway">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">15 / 20</span>
+                    <h2 class="project-title">IBERJOYA</h2>
+                    <p class="project-category">HIGH-JEWERLY RUNWAY &amp; PROJECTION MAPPING SHOW - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 16: IBERJOYA 2007 -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="IBERJOYA_2007.1.jpg" alt="Iberjoya Audiovisual Jewelry Catwalk Show">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">16 / 20</span>
+                    <h2 class="project-title">IBERJOYA</h2>
+                    <p class="project-category">AUDIOVISUAL JEWERLY CATWALK SHOW - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 17: TEATRO REAL -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="TEATRO_REAL_1.jpg" alt="Teatro Real Virtual Scenography">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">17 / 20</span>
+                    <h2 class="project-title">TEATRO REAL</h2>
+                    <p class="project-category">VIRTUAL SCENOGRAPHY, LARGE-SCALE MAPPING PROJECTION - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 18: IBERJOYA 2005 (ANILLO) -->
+        <section class="project-slide">
+            <div class="parallax-scene">
+                <div class="layer-bg" id="ring-bg">
+                    <img src="IBERJOYA_2005_FONDO.jpg" alt="Escenario Agua Iberjoya 2005">
+                </div>
+                <div class="layer-fg ring-layer" id="ring-fg">
+                    <img src="IBERJOYA_2005_ANILLO.png" alt="Joya Flotante Iberjoya">
+                </div>
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">18 / 20</span>
+                    <h2 class="project-title">IBERJOYA</h2>
+                    <p class="project-category">SYNCHRONIZED SWIMMING AUDIOVISUAL INSTALLATION - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 19: MARLBORO RACING -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="MARLBORO_2.jpg" alt="Marlboro DJ Audiovisual Installation">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">19 / 20</span>
+                    <h2 class="project-title">MARLBORO</h2>
+                    <p class="project-category">DJ AUDIOVISUAL INSTALLATION &amp; BRAND ACTIVATION - CANARIAS</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROYECTO 20: MARLBORO BRAND -->
+        <section class="project-slide">
+            <div class="project-bg">
+                <img src="MARLBORO.jpg" alt="Marlboro Brand Experience">
+            </div>
+            <div class="project-content">
+                <div class="project-meta">
+                    <span class="project-index">20 / 20</span>
+                    <h2 class="project-title">MARLBORO BRAND EXPERIENCE</h2>
+                    <p class="project-category">PRODUCT LAUNCH KINETIC SCENOGRAPHY AUDIOVISUAL SHOW - MADRID</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const container = document.getElementById('scroll-container');
+        const indicatorContainer = document.getElementById('slide-indicator');
+        const slides = document.querySelectorAll('.project-slide');
+        
+        // Elementos Multicapa activos
+        const sphereBg = document.getElementById('sphere-bg'); // Proyecto 01
+        const stageBg = document.getElementById('stage-bg'); // Proyecto 02
+        const whaleFg = document.getElementById('whale-fg'); // Proyecto 02 (PNG Real)
+        const ringFg = document.getElementById('ring-fg'); // Proyecto 18
+        const ringBg = document.getElementById('ring-bg'); // Proyecto 18
+
+        // Generar puntos laterales interactivos
+        slides.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.classList.add('indicator-dot');
+            if (index === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+                slides[index].scrollIntoView({ behavior: 'smooth' });
+            });
+            indicatorContainer.appendChild(dot);
+        });
+
+        const dots = document.querySelectorAll('.indicator-dot');
+
+        let normX = 0;
+        let normY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            if (window.innerWidth <= 768) return;
+            normX = (e.clientX / window.innerWidth - 0.5) * 2;
+            normY = (e.clientY / window.innerHeight - 0.5) * 2;
+            updateParallax();
+        });
+
+        // -------------------------------------------------------------
+        // MOTOR THREE.JS: ESFERA 3D GEOMÉTRICA (PROYECTO 01)
+        // -------------------------------------------------------------
+        const canvasSphere = document.getElementById('sphere-3d-canvas');
+        const sceneSphere = new THREE.Scene();
+        const cameraSphere = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        cameraSphere.position.z = 10;
+
+        const rendererSphere = new THREE.WebGLRenderer({ canvas: canvasSphere, alpha: true, antialias: true });
+        rendererSphere.setClearColor(0x000000, 0);
+        rendererSphere.setSize(window.innerWidth, window.innerHeight);
+        rendererSphere.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const sphereGeo = new THREE.IcosahedronGeometry(2.4, 1);
+        const sphereMat = new THREE.MeshStandardMaterial({
+            color: 0x1570e6,
+            flatShading: true,
+            metalness: 0.25,
+            roughness: 0.35,
+            emissive: 0x072866,
+            emissiveIntensity: 0.45
+        });
+        const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+        sphereMesh.position.y = 1.6;
+        sceneSphere.add(sphereMesh);
+
+        const wireGeo = new THREE.WireframeGeometry(sphereGeo);
+        const wireMat = new THREE.LineBasicMaterial({ color: 0x8ec7ff, transparent: true, opacity: 0.4 });
+        const sphereWire = new THREE.LineSegments(wireGeo, wireMat);
+        sphereMesh.add(sphereWire);
+
+        const ambSphere = new THREE.AmbientLight(0xffffff, 0.75);
+        sceneSphere.add(ambSphere);
+
+        const pLightSphere1 = new THREE.PointLight(0x00d9ff, 2.8, 50);
+        pLightSphere1.position.set(5, 5, 8);
+        sceneSphere.add(pLightSphere1);
+
+        const pLightSphere2 = new THREE.PointLight(0x0033aa, 2.2, 50);
+        pLightSphere2.position.set(-5, -5, 5);
+        sceneSphere.add(pLightSphere2);
+
+        let sphereTargetRotX = 0;
+        let sphereTargetRotY = 0;
+        let sphereCurrentRotX = 0;
+        let sphereCurrentRotY = 0;
+
+        function animateSphere() {
+            requestAnimationFrame(animateSphere);
+            sphereMesh.rotation.y += 0.002;
+            sphereMesh.rotation.x += 0.001;
+            sphereCurrentRotX += (sphereTargetRotX - sphereCurrentRotX) * 0.03;
+            sphereCurrentRotY += (sphereTargetRotY - sphereCurrentRotY) * 0.03;
+            sphereWire.rotation.x = sphereCurrentRotX;
+            sphereWire.rotation.y = sphereCurrentRotY;
+            rendererSphere.render(sceneSphere, cameraSphere);
+        }
+        animateSphere();
+
+        window.addEventListener('resize', () => {
+            cameraSphere.aspect = window.innerWidth / window.innerHeight;
+            cameraSphere.updateProjectionMatrix();
+            rendererSphere.setSize(window.innerWidth, window.innerHeight);
+            updateParallax();
+        });
+
+        // -------------------------------------------------------------
+        // PARALLAX & SCROLL MANAGER
+        // -------------------------------------------------------------
+        function updateParallax() {
+            const scrollPosition = container.scrollTop;
+            const height = window.innerHeight;
+            const activeIndex = Math.round(scrollPosition / height);
+
+            dots.forEach((dot, index) => {
+                if (index === activeIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+
+            if (window.innerWidth <= 768) return;
+
+            // Rotación 3D para la Esfera
+            sphereTargetRotY = normX * 0.35;
+            sphereTargetRotX = normY * -0.25;
+
+            slides.forEach((slide, index) => {
+                const relativeScroll = scrollPosition - (index * height);
+                const content = slide.querySelector('.project-content');
+                
+                // Fondo estándar
+                const bg = slide.querySelector('.project-bg');
+                if (bg) {
+                    bg.style.transform = `translate3d(0, ${relativeScroll * 0.12}px, 0)`;
+                }
+
+                // 1. Repsol Esfera 3D (Proyecto 01)
+                if (slide === slides[0]) {
+                    if (sphereBg) {
+                        const bgX = normX * 18;
+                        const bgY = (relativeScroll * 0.05) + (normY * 12);
+                        sphereBg.style.transform = `translate3d(${bgX}px, ${bgY}px, 0) scale(1.02)`;
+                    }
+                    if (sphereMesh) {
+                        sphereMesh.position.x = normX * 0.9;
+                        sphereMesh.position.y = 1.6 + (-relativeScroll * 0.0035) + (normY * -0.6);
+                        sphereMesh.position.z = Math.min(2.0, Math.abs(relativeScroll) * 0.0025);
+                    }
+                }
+
+                // 2. Repsol Ballena REAL (Proyecto 02)
+                if (slide === slides[1]) {
+                    const scrollShift = relativeScroll * 0.28;
+                    if (stageBg) {
+                        const bgX = normX * 18;
+                        const bgY = (relativeScroll * 0.05) + (normY * 14);
+                        stageBg.style.transform = `translate3d(${bgX}px, ${bgY}px, 0) scale(1.02)`;
+                    }
+                    if (whaleFg) {
+                        const whaleX = normX * -110;
+                        const whaleY = scrollShift + (normY * -85);
+                        const rotY = normX * -16;
+                        const rotX = normY * 12;
+                        const currentScale = 1.10 + Math.abs(relativeScroll) * 0.0007; 
+                        whaleFg.style.transform = `translate3d(${whaleX}px, ${whaleY}px, 120px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${currentScale})`;
+                    }
+                }
+
+                // 3. Iberjoya Anillo (Proyecto 18)
+                if (slide === slides[17]) {
+                    const scrollShift = relativeScroll * 0.48;
+                    if (ringBg) {
+                        const bgX = normX * 18;
+                        const bgY = (relativeScroll * 0.05) + (normY * 12);
+                        ringBg.style.transform = `translate3d(${bgX}px, ${bgY}px, 0) scale(1.02)`;
+                    }
+                    if (ringFg) {
+                        const ringX = normX * 115;
+                        const ringY = scrollShift + (normY * 80);
+                        const rotY = normX * 28;
+                        const rotX = normY * -20;
+                        const currentScale = 1.45 + Math.abs(relativeScroll) * 0.0008; 
+                        ringFg.style.transform = `translate3d(${ringX}px, ${ringY}px, 280px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${currentScale})`;
+                    }
+                }
+
+                // Bloque de texto
+                if (content) {
+                    content.style.transform = `translate3d(0, ${relativeScroll * -0.14}px, 0)`;
+                }
+            });
+        }
+
+        container.addEventListener('scroll', updateParallax);
+        window.addEventListener('resize', updateParallax);
+        updateParallax();
+    </script>
+</body>
+</html>

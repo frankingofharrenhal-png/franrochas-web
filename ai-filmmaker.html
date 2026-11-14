@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fran Rochas | A.I. Filmmaker</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* TOP NAVIGATION */
+        .main-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 35px 20px 20px 20px;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: auto;
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-nav a {
+            position: relative;
+            display: inline-block;
+            padding: 6px 12px;
+            text-decoration: none;
+            outline: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.80rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: transparent;
+        }
+
+        .main-nav a span {
+            color: #ffffff;
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-nav a:hover span,
+        .main-nav a.active span {
+            color: #000000;
+        }
+
+        .main-nav a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background-color: #ffffff;
+            z-index: 1;
+            transition: height 0.25s ease;
+        }
+
+        .main-nav a:hover::before,
+        .main-nav a.active::before {
+            height: 100%;
+        }
+
+        /* GLOBAL FLOATING KINETIC TRACK */
+        .floating-kinetic-track {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 500;
+            overflow: hidden;
+            transition: opacity 0.4s ease;
+        }
+
+        body.terminal-active .floating-kinetic-track {
+            opacity: 0;
+        }
+
+        /* 1. FRONT LAYER: CHOOSE YOUR PROMPT */
+        .floating-prompt-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 502;
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.4rem, 4.8vw, 4.5rem);
+            font-weight: 900;
+            line-height: 0.86;
+            letter-spacing: -1.5px;
+            text-transform: uppercase;
+            color: #ff3b00;
+            text-shadow: 0 0 35px rgba(255, 59, 0, 0.85);
+            will-change: transform;
+            animation: safeDiagonalLoop 22s ease-in-out infinite alternate;
+        }
+
+        @keyframes safeDiagonalLoop {
+            0% { transform: translate3d(5vw, 12vh, 0) rotate(-4deg); }
+            30% { transform: translate3d(52vw, 56vh, 0) rotate(2deg); }
+            65% { transform: translate3d(8vw, 62vh, 0) rotate(-3deg); }
+            100% { transform: translate3d(54vw, 15vh, 0) rotate(3deg); }
+        }
+
+        /* 2. BACK LAYER: KEYWORDS CROSSING BEHIND */
+        .floating-keywords-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 501;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.80rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #00ff41;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+            white-space: nowrap;
+            will-change: transform;
+            animation: oppositeDiagonalLoop 26s ease-in-out infinite alternate;
+        }
+
+        @keyframes oppositeDiagonalLoop {
+            0% { transform: translate3d(55vw, 75vh, 0) rotate(3deg); }
+            35% { transform: translate3d(8vw, 25vh, 0) rotate(-2deg); }
+            70% { transform: translate3d(48vw, 12vh, 0) rotate(4deg); }
+            100% { transform: translate3d(10vw, 68vh, 0) rotate(-3deg); }
+        }
+
+        /* SQUARE MOSAIC GRID */
+        .strasser-mosaic-grid {
+            width: 100vw;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            padding-top: 90px;
+            background: #000000;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* MOSAIC CELL */
+        .mosaic-cell {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: #000000;
+            cursor: pointer;
+        }
+
+        .cell-media-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* BASE IMAGE: SUBTLE NEGATIVE IN DEFAULT STATE */
+        .cell-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transform: scale(1.08);
+            display: block;
+            filter: grayscale(100%) invert(1) contrast(2.4) brightness(0.9);
+            mix-blend-mode: overlay;
+            opacity: 0.72;
+            z-index: 2;
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease, opacity 0.35s ease, mix-blend-mode 0.35s ease;
+        }
+
+        /* PLAY BADGE ON VIDEO CELLS */
+        .video-trigger .play-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 9;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            color: #00ff41;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(0, 255, 65, 0.4);
+            padding: 4px 8px;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .video-trigger:hover .play-indicator {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* SPECIFIC CROPS */
+        .crop-alone {
+            transform: scale(1.52) translateY(4%) !important;
+            object-position: 50% 60% !important;
+        }
+
+        .crop-symptom {
+            transform: scale(1.30) !important;
+            object-position: 50% 50% !important;
+        }
+
+        /* LAYER 1: HEAVY ANALOG XEROX NOISE */
+        .cell-media-wrap::before {
+            content: '';
+            position: absolute;
+            inset: -40px;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='xeroxGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 3.8 -0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23xeroxGrain)'/%3E%3C/svg%3E");
+            mix-blend-mode: hard-light;
+            pointer-events: none;
+            z-index: 4;
+            opacity: 0.95;
+            transition: opacity 0.35s ease;
+        }
+
+        /* LAYER 2: CRT SCANLINES */
+        .cell-media-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0px, rgba(0, 0, 0, 0.4) 1px, transparent 1px, transparent 2px);
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.95;
+            transition: opacity 0.35s ease;
+        }
+
+        /* BASE DUOTONE COLOR LAYER */
+        .mosaic-cell .color-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.35s ease;
+        }
+
+        /* DUOTONE PALETTES */
+        .duo-pink-blue .color-layer { background: linear-gradient(135deg, #101c7a 0%, #ff0077 100%); }
+        .duo-cyan-blue .color-layer { background: linear-gradient(135deg, #051447 0%, #00eaff 100%); }
+        .duo-lime-navy .color-layer { background: linear-gradient(135deg, #041f38 0%, #39ff14 100%); }
+        .duo-orange-purple .color-layer { background: linear-gradient(135deg, #2b0445 0%, #ff5e00 100%); }
+        .duo-yellow-blue .color-layer { background: linear-gradient(135deg, #071747 0%, #fffb00 100%); }
+        .duo-red-teal .color-layer { background: linear-gradient(135deg, #032b27 0%, #ff1100 100%); }
+
+        /* HOVER TITLES */
+        .hover-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .hover-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            color: #ffffff;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
+        }
+
+        /* HOVER INTERACTIONS */
+        .mosaic-cell:hover .cell-img {
+            filter: none !important;
+            mix-blend-mode: normal !important;
+            opacity: 1 !important;
+            transform: scale(1.12);
+            z-index: 8;
+        }
+
+        .mosaic-cell:hover .crop-alone { transform: scale(1.58) translateY(4%) !important; }
+        .mosaic-cell:hover .crop-symptom { transform: scale(1.35) !important; }
+        .mosaic-cell:hover .hover-info { opacity: 1; transform: translateY(0); }
+        .mosaic-cell:hover .color-layer,
+        .mosaic-cell:hover .cell-media-wrap::before,
+        .mosaic-cell:hover .cell-media-wrap::after { opacity: 0 !important; }
+
+        /* THE RAW TERMINAL DECK */
+        .terminal-deck {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: #000000;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .terminal-deck.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .deck-screen-zone {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #050505;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .deck-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #000000;
+        }
+
+        .deck-crt-mesh {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0px, rgba(0, 0, 0, 0.3) 1px, transparent 1px, transparent 3px);
+            pointer-events: none;
+            z-index: 4;
+            opacity: 0.6;
+        }
+
+        .deck-control-rack {
+            height: 100vh;
+            background: #090909;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            z-index: 10;
+        }
+
+        .rack-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rack-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+        }
+
+        .rack-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #00ff41;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .rack-time-box {
+            margin: 25px 0;
+            padding: 16px;
+            background: #000000;
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .time-display {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            color: #00ff41;
+        }
+
+        .rec-bulb {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff3b00;
+            box-shadow: 0 0 8px #ff3b00;
+            animation: bulbPulse 1.2s infinite;
+        }
+
+        @keyframes bulbPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .rack-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rack-btn {
+            width: 100%;
+            padding: 14px 18px;
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .rack-btn:hover {
+            background: #00ff41;
+            color: #000000;
+            border-color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+        }
+
+        .rack-btn-exit {
+            background: transparent;
+            border: 1px solid rgba(255, 59, 0, 0.6);
+            color: #ff3b00;
+            margin-top: 15px;
+        }
+
+        .rack-btn-exit:hover {
+            background: #ff3b00 !important;
+            color: #000000 !important;
+            border-color: #ff3b00 !important;
+            box-shadow: 0 0 20px rgba(255, 59, 0, 0.6) !important;
+        }
+
+        .deck-progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .deck-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #00ff41;
+            box-shadow: 0 0 8px #00ff41;
+            transition: width 0.1s linear;
+        }
+
+        /* IMAGE LIGHTBOX MODAL */
+        .cinema-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.97);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .cinema-lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-wrapper {
+            position: relative;
+            width: 90vw;
+            max-width: 1450px;
+            aspect-ratio: 16 / 9;
+            background: #000000;
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.95);
+        }
+
+        .lightbox-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -45px;
+            right: 0;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.80rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .lightbox-caption {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.80rem;
+            letter-spacing: 2px;
+            color: #00ff41;
+            text-shadow: 0 0 8px rgba(0, 255, 65, 0.85);
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 1024px) {
+            .strasser-mosaic-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .terminal-deck {
+                grid-template-columns: 1fr;
+                grid-template-rows: 65vh 35vh;
+            }
+            .deck-screen-zone {
+                height: 65vh;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            }
+            .deck-control-rack {
+                height: 35vh;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .strasser-mosaic-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- GLOBAL KINETIC TRACKS -->
+    <div class="floating-kinetic-track">
+        <div class="floating-keywords-text">
+            CRUCIAL, ESSENTIAL, IMMERSE YOURSELF, OVERVIEW, IN SHORT, VIBRANT
+        </div>
+        <div class="floating-prompt-text">
+            CHOOSE<br>YOUR PROMPT
+        </div>
+    </div>
+
+    <!-- MENÚ SUPERIOR (ORDEN UNIFICADO Y ENLACES ACTIVOS) -->
+    <nav class="main-nav">
+        <ul>
+            <li><a href="index.html"><span>HOME</span></a></li>
+            <li><a href="work.html"><span>WORK</span></a></li>
+            <li><a href="behind-the-scenes.html"><span>BEHIND THE SCENES</span></a></li>
+            <li><a href="ai-filmmaker.html" class="active"><span>A.I. FILMMAKER</span></a></li>
+            <li><a href="about3D/about.html"><span>ABOUT</span></a></li>
+            <li><a href="contact.html"><span>CONTACT</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- MOSAICO DE 20 VÍDEOS (LOS 4 NUEVOS ARRIBA + 16 EXISTENTES) -->
+    <main class="strasser-mosaic-grid">
+
+        <!-- 01: BLACK (NUEVO) -->
+        <article class="mosaic-cell duo-orange-purple video-trigger" data-title="BLACK" data-video="BLACK.mov">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="BLACK.png" class="cell-img" alt="BLACK">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">BLACK</div>
+            </div>
+        </article>
+
+        <!-- 02: FE (NUEVO) -->
+        <article class="mosaic-cell duo-lime-navy video-trigger" data-title="FE" data-video="FE(1).mov">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="FE(1).png" class="cell-img" alt="FE">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">FE</div>
+            </div>
+        </article>
+
+        <!-- 03: IF YOU CAN IMAGINE (NUEVO) -->
+        <article class="mosaic-cell duo-yellow-blue video-trigger" data-title="IF YOU CAN IMAGINE" data-video="IF YOU CAN IMAGINE.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="IF YOU CAN IMAGINE.png" class="cell-img" alt="If You Can Imagine">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">IF YOU CAN IMAGINE</div>
+            </div>
+        </article>
+
+        <!-- 04: SHERISE (NUEVO) -->
+        <article class="mosaic-cell duo-red-teal video-trigger" data-title="SHERISE" data-video="SheRise.mov">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="SheRise.png" class="cell-img" alt="SheRise">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">SHERISE</div>
+            </div>
+        </article>
+
+        <!-- 05: HOW ARE YOU DOING? -->
+        <article class="mosaic-cell duo-pink-blue video-trigger" data-title="HOW ARE YOU DOING?" data-video="HOW ARE YOU DOING.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="COMO ESTAN USTEDES.jpg" class="cell-img" alt="How Are You Doing?">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">HOW ARE YOU DOING?</div>
+            </div>
+        </article>
+
+        <!-- 06: SYMPTOM -->
+        <article class="mosaic-cell duo-cyan-blue video-trigger" data-title="SYMPTOM" data-video="SYMPTOM.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="SYMPTOM.JPG" class="cell-img crop-symptom" alt="Symptom">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">SYMPTOM</div>
+            </div>
+        </article>
+
+        <!-- 07: LIGHT -->
+        <article class="mosaic-cell duo-orange-purple video-trigger" data-title="LIGHT" data-video="LIGHT.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="LIGHT.jpg" class="cell-img" alt="Light">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">LIGHT</div>
+            </div>
+        </article>
+
+        <!-- 08: MEMENTO MORI -->
+        <article class="mosaic-cell duo-lime-navy video-trigger" data-title="MEMENTO MORI" data-video="MEMENTO MORI.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="MEMENTO MORI.jpg" class="cell-img" alt="Memento Mori">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">MEMENTO MORI</div>
+            </div>
+        </article>
+
+        <!-- 09: A MONDAY CALLS -->
+        <article class="mosaic-cell duo-yellow-blue video-trigger" data-title="A MONDAY CALLS" data-video="A MONDAY CALLS.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="UN LUNES VIENE A VERME.jpg" class="cell-img" alt="A Monday Calls">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">A MONDAY CALLS</div>
+            </div>
+        </article>
+
+        <!-- 10: ALONE -->
+        <article class="mosaic-cell duo-red-teal video-trigger" data-title="ALONE" data-video="ALONE.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="ALONE.jpg" class="cell-img crop-alone" alt="Alone">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">ALONE</div>
+            </div>
+        </article>
+
+        <!-- 11: ANGEL -->
+        <article class="mosaic-cell duo-pink-blue video-trigger" data-title="ANGEL" data-video="ANGEL.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="ANGEL.jpg" class="cell-img" alt="Angel">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">ANGEL</div>
+            </div>
+        </article>
+
+        <!-- 12: VAPERS -->
+        <article class="mosaic-cell duo-cyan-blue video-trigger" data-title="VAPERS" data-video="VAPERS.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="VAPERS.jpg" class="cell-img" alt="Vapers">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">VAPERS</div>
+            </div>
+        </article>
+
+        <!-- 13: ROADHOUSE -->
+        <article class="mosaic-cell duo-lime-navy video-trigger" data-title="ROADHOUSE" data-video="ROADHOUSE BAR 2026.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="ROADHOUSE.jpg" class="cell-img" alt="Roadhouse">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">ROADHOUSE</div>
+            </div>
+        </article>
+
+        <!-- 14: NEXT STOP -->
+        <article class="mosaic-cell duo-orange-purple video-trigger" data-title="NEXT STOP" data-video="NEXT STOP.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="PROXIMA PARADA.jpg" class="cell-img" alt="Next Stop">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">NEXT STOP</div>
+            </div>
+        </article>
+
+        <!-- 15: DRIVE -->
+        <article class="mosaic-cell duo-yellow-blue video-trigger" data-title="DRIVE" data-video="DRIVE.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="DRIVE.jpg" class="cell-img" alt="Drive">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">DRIVE</div>
+            </div>
+        </article>
+
+        <!-- 16: THE JOURNEY -->
+        <article class="mosaic-cell duo-red-teal video-trigger" data-title="THE JOURNEY" data-video="THE JOURNEY.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="THE JOURNEY.jpg" class="cell-img" alt="The Journey">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">THE JOURNEY</div>
+            </div>
+        </article>
+
+        <!-- 17: HOME ALONE -->
+        <article class="mosaic-cell duo-pink-blue video-trigger" data-title="HOME ALONE" data-video="HOME ALONE.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="SOLO EN CASA.jpg" class="cell-img" alt="Home Alone">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">HOME ALONE</div>
+            </div>
+        </article>
+
+        <!-- 18: SYNC -->
+        <article class="mosaic-cell duo-cyan-blue video-trigger" data-title="SYNC" data-video="SYNC.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="SYNC.jpg" class="cell-img" alt="SYNC">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">SYNC</div>
+            </div>
+        </article>
+
+        <!-- 19: AIR -->
+        <article class="mosaic-cell duo-lime-navy video-trigger" data-title="AIR" data-video="AIR.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="AIR.jpg" class="cell-img" alt="Air">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">AIR</div>
+            </div>
+        </article>
+
+        <!-- 20: ACTION -->
+        <article class="mosaic-cell duo-orange-purple video-trigger" data-title="ACTION" data-video="ACTION.mp4">
+            <div class="play-indicator">▶ TERMINAL PLAY</div>
+            <div class="color-layer"></div>
+            <div class="cell-media-wrap">
+                <img src="ACTION.jpg" class="cell-img" alt="Action">
+            </div>
+            <div class="hover-info">
+                <div class="hover-title">ACTION</div>
+            </div>
+        </article>
+
+    </main>
+
+    <!-- THE RAW TERMINAL DECK -->
+    <div class="terminal-deck" id="terminal-deck">
+        <div class="deck-screen-zone">
+            <div class="deck-crt-mesh"></div>
+            <video class="deck-video" id="deck-video" playsinline preload="metadata">
+                <source src="" id="deck-video-source" type="video/mp4">
+            </video>
+        </div>
+
+        <div class="deck-control-rack">
+            <div class="rack-title-box">
+                <span class="rack-label">PLAYBACK TERMINAL //</span>
+                <span class="rack-title" id="deck-title-text">TITLE</span>
+                
+                <div class="deck-progress-container" id="deck-progress-container">
+                    <div class="deck-progress-bar" id="deck-progress-bar"></div>
+                </div>
+            </div>
+
+            <div class="rack-time-box">
+                <div class="time-display" id="deck-time-display">00:00 / 00:00</div>
+                <div class="rec-bulb"></div>
+            </div>
+
+            <div class="rack-buttons">
+                <button class="rack-btn" id="btn-play-pause">
+                    <span>PLAY / PAUSE</span>
+                    <span id="btn-play-state">▶</span>
+                </button>
+                <button class="rack-btn" id="btn-mute">
+                    <span>AUDIO</span>
+                    <span id="btn-mute-state">ON</span>
+                </button>
+                <button class="rack-btn" id="btn-restart">
+                    <span>RESTART REEL</span>
+                    <span>↺</span>
+                </button>
+                <button class="rack-btn rack-btn-exit" id="btn-deck-close">
+                    <span>EXIT DECK</span>
+                    <span>[ESC]</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGE LIGHTBOX MODAL -->
+    <div class="cinema-lightbox" id="lightbox">
+        <div class="lightbox-wrapper">
+            <button class="lightbox-close" id="lightbox-close">✕ CLOSE</button>
+            <img src="" id="lightbox-img" alt="Lightbox Visual">
+            <div class="lightbox-caption" id="lightbox-caption"></div>
+        </div>
+    </div>
+
+    <script>
+        const videoTriggers = document.querySelectorAll('.video-trigger');
+        const deck = document.getElementById('terminal-deck');
+        const deckVideo = document.getElementById('deck-video');
+        const deckVideoSource = document.getElementById('deck-video-source');
+        const deckTitleText = document.getElementById('deck-title-text');
+        const deckTimeDisplay = document.getElementById('deck-time-display');
+        const deckProgressBar = document.getElementById('deck-progress-bar');
+        const deckProgressContainer = document.getElementById('deck-progress-container');
+
+        const btnPlayPause = document.getElementById('btn-play-pause');
+        const btnPlayState = document.getElementById('btn-play-state');
+        const btnMute = document.getElementById('btn-mute');
+        const btnMuteState = document.getElementById('btn-mute-state');
+        const btnRestart = document.getElementById('btn-restart');
+        const btnDeckClose = document.getElementById('btn-deck-close');
+
+        const photoCells = document.querySelectorAll('.mosaic-cell:not(.video-trigger)');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
+        const lightboxClose = document.getElementById('lightbox-close');
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        videoTriggers.forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const videoSrc = trigger.getAttribute('data-video');
+                const title = trigger.getAttribute('data-title');
+
+                if (videoSrc) {
+                    deckTitleText.textContent = title;
+                    deckVideoSource.src = encodeURI(videoSrc);
+                    deckVideoSource.type = videoSrc.toLowerCase().endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
+                    deckVideo.load();
+
+                    document.body.classList.add('terminal-active');
+                    deck.classList.add('active');
+
+                    deckVideo.play().then(() => {
+                        btnPlayState.textContent = '❚❚';
+                    }).catch(() => {
+                        btnPlayState.textContent = '▶';
+                    });
+                }
+            });
+        });
+
+        btnPlayPause.addEventListener('click', () => {
+            if (deckVideo.paused) {
+                deckVideo.play();
+                btnPlayState.textContent = '❚❚';
+            } else {
+                deckVideo.pause();
+                btnPlayState.textContent = '▶';
+            }
+        });
+
+        btnMute.addEventListener('click', () => {
+            deckVideo.muted = !deckVideo.muted;
+            btnMuteState.textContent = deckVideo.muted ? 'MUTED' : 'ON';
+        });
+
+        btnRestart.addEventListener('click', () => {
+            deckVideo.currentTime = 0;
+            deckVideo.play();
+            btnPlayState.textContent = '❚❚';
+        });
+
+        deckVideo.addEventListener('timeupdate', () => {
+            const current = deckVideo.currentTime || 0;
+            const duration = deckVideo.duration || 0;
+            deckTimeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+
+            if (duration > 0) {
+                const percent = (current / duration) * 100;
+                deckProgressBar.style.width = `${percent}%`;
+            }
+        });
+
+        deckProgressContainer.addEventListener('click', (e) => {
+            const rect = deckProgressContainer.getBoundingClientRect();
+            const clickPos = (e.clientX - rect.left) / rect.width;
+            if (deckVideo.duration) {
+                deckVideo.currentTime = clickPos * deckVideo.duration;
+            }
+        });
+
+        function closeTerminalDeck() {
+            deck.classList.remove('active');
+            document.body.classList.remove('terminal-active');
+            deckVideo.pause();
+            deckVideo.currentTime = 0;
+            deckVideoSource.src = '';
+        }
+
+        btnDeckClose.addEventListener('click', closeTerminalDeck);
+
+        photoCells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                const src = cell.getAttribute('data-src');
+                const title = cell.getAttribute('data-title');
+                if (src) {
+                    lightboxImg.src = src;
+                    lightboxCaption.textContent = title;
+                    lightbox.classList.add('active');
+                }
+            });
+        });
+
+        lightboxClose.addEventListener('click', () => {
+            lightbox.classList.remove('active');
+        });
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                lightbox.classList.remove('active');
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (deck.classList.contains('active')) {
+                    closeTerminalDeck();
+                }
+                if (lightbox.classList.contains('active')) {
+                    lightbox.classList.remove('active');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

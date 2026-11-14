@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fran Rochas | Behind the Scenes</title>
+
+    <!-- Fuentes oficiales -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- GSAP Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* TOP NAVIGATION */
+        .main-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 35px 20px 20px 20px;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: auto;
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-nav a {
+            position: relative;
+            display: inline-block;
+            padding: 6px 12px;
+            text-decoration: none;
+            outline: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.80rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: transparent;
+        }
+
+        .main-nav a span {
+            color: #ffffff;
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-nav a:hover span,
+        .main-nav a.active span {
+            color: #000000;
+        }
+
+        .main-nav a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background-color: #ffffff;
+            z-index: 1;
+            transition: height 0.25s ease;
+        }
+
+        .main-nav a:hover::before,
+        .main-nav a.active::before {
+            height: 100%;
+        }
+
+        /* IDENTIFICADOR INFERIOR */
+        .hero-brand-tag {
+            position: absolute;
+            bottom: 35px;
+            left: 40px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+
+        /* ESCENARIO DEL SLIDESHOW */
+        .slideshow {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #000000;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            visibility: hidden;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .slide.is-active {
+            visibility: visible;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* MÁSCARA Y CONTENEDOR PARALLAX */
+        .slide-img-wrap {
+            position: absolute;
+            top: 0;
+            left: -12vw;
+            width: 124vw;
+            height: 100vh;
+            overflow: hidden;
+            will-change: transform;
+        }
+
+        .slide-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center 12%;
+            background-repeat: no-repeat;
+            filter: brightness(0.85) contrast(1.08);
+            will-change: transform;
+        }
+
+        /* TRAMA SCANLINES */
+        .slide-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.8) 100%),
+                repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0px, rgba(0, 0, 0, 0.12) 1px, transparent 1px, transparent 3px);
+            z-index: 3;
+        }
+
+        /* CONTENIDO EDITORIAL DE CADA SLIDE */
+        .slide-content {
+            position: absolute;
+            top: 50%;
+            right: 6vw;
+            transform: translateY(-50%);
+            z-index: 20;
+            width: auto;
+            max-width: min(860px, 80vw);
+            text-align: right;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        .slide-counter {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: #00ff41;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+            text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+            will-change: transform, opacity;
+        }
+
+        .slide-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.7rem, 3.2vw, 3rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 1.08;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            margin-bottom: 14px;
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: normal;
+            text-wrap: balance;
+            will-change: transform, opacity;
+        }
+
+        .slide-category {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.80rem;
+            color: #e5b842;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            line-height: 1.4;
+            white-space: normal;
+            word-break: normal;
+            overflow-wrap: normal;
+            will-change: transform, opacity;
+        }
+
+        /* CONTROLES INFERIORES */
+        .nav-controls {
+            position: absolute;
+            bottom: 35px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: rgba(12, 12, 12, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            padding: 12px 22px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(8px);
+            outline: none;
+        }
+
+        .nav-btn:hover {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        /* BARRA DE PROGRESO */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+            z-index: 100;
+            transition: width 0.35s ease;
+        }
+
+        @media (max-width: 768px) {
+            .slide-content {
+                right: 6%;
+                left: 6%;
+                text-align: left;
+                top: auto;
+                bottom: 120px;
+                transform: none;
+                max-width: 88vw;
+            }
+
+            .slide-title {
+                font-size: 1.8rem;
+            }
+
+            .nav-controls {
+                bottom: 25px;
+                right: 25px;
+            }
+
+            .hero-brand-tag {
+                display: none;
+            }
+
+            .main-nav {
+                padding: 25px 10px;
+            }
+
+            .main-nav ul {
+                gap: 10px;
+            }
+
+            .main-nav a {
+                font-size: 0.68rem;
+                padding: 4px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ SUPERIOR -->
+    <nav class="main-nav">
+        <ul>
+            <li><a href="index.html"><span>HOME</span></a></li>
+            <li><a href="work.html"><span>WORK</span></a></li>
+            <li><a href="ai-filmmaker.html"><span>A.I. FILMMAKER</span></a></li>
+            <li><a href="behind-the-scenes.html" class="active"><span>BEHIND THE SCENES</span></a></li>
+            <li><a href="about3D/about.html"><span>ABOUT</span></a></li>
+            <li><a href="contact.html"><span>CONTACT</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- CONTENEDOR SLIDESHOW PARALLAX -->
+    <div class="slideshow" id="slideshow"></div>
+
+    <!-- IDENTIFICADOR INFERIOR -->
+    <div class="hero-brand-tag">
+        <div class="brand-name">FRAN ROCHAS</div>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn">&larr; PREV</button>
+        <button class="nav-btn" id="nextBtn">NEXT &rarr;</button>
+    </div>
+
+    <!-- PROGRESO -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <script>
+        // 31 PROYECTOS VERIFICADOS (PORTADA: LIVE SHOW CONTROL 04)
+        const slidesData = [
+            { img: "LIVE_4.jpg", title: "Live Show Control 04", category: "On-Stage Direction // Live Execution" },
+            { img: "TIKTOK SET DESIGN_1.jpg", title: "TikTok Set Design 01", category: "Scenography // Stage Architecture" },
+            { img: "TIKTOK SET DESIGN_2..jpg", title: "TikTok Set Design 02", category: "Scenography // Stage Architecture" },
+            { img: "REPSOL STOPGO.jpg", title: "REPSOL STOP&GO", category: "COMMERCIAL // DIRECTION" },
+            { img: "EVENTOPLUS AWARDS_2012_1.jpg", title: "EVENTO PLUS AWARDS", category: "GRAND PRIZE OF THE JURY" },
+            { img: "MAPPING SHOW  MACHINE HIMOINSA_1.jpg", title: "Himoinsa Machine 01", category: "Industrial Mapping // 3D Show" },
+            { img: "MAPPING SHOW  MACHINE HIMOINSA_2.jpg", title: "Himoinsa Machine 02", category: "Industrial Mapping // 3D Show" },
+            { img: "MAPPING SHOW  MACHINE HIMOINSA.jpg", title: "HIMOINSA MACHINE", category: "INDUSTRIAL MAPPING // 3D SHOW" },
+            { img: "LEROY MERLIN.jpg", title: "LEROY MERLIN", category: "COMMERCIAL // DIRECTION" },
+            { img: "WORK IN PROCESS.jpg", title: "Work In Process", category: "Backstage // Technical Assembly" },
+            { img: "MARLBORO PRODUCT LAUNCH STAGE DESIGN.jpg", title: "MARLBORO", category: "PRODUCT LAUNCH // STAGE DESIGN" },
+            { img: "REPSOL JGA.jpg", title: "REPSOL JGA", category: "CORPORATE EVENT // LIVE SHOW" },
+            { img: "REPSOL STAGE DESIGN.jpg", title: "Repsol Stage Architecture", category: "Scenographic Engineering" },
+            { img: "HUAWEI MNAC SHOW.jpg", title: "Huawei MNAC Show", category: "Immersive Night // Show Direction" },
+            { img: "LIVE.jpg", title: "Live Show Control", category: "On-Stage Direction // Technical Cues" },
+            { img: "3D WORK IN PROCESS.jpg", title: "3D Work In Process", category: "Pre-Visualization // Unreal Engine" },
+            { img: "IBERJOYA STAGE DESIGN.jpg", title: "Iberjoya Scenography", category: "Luxury Expo // Set Design" },
+            { img: "SHOOTING DAY.jpg", title: "Shooting Day 01", category: "Film Direction // Camera Unit" },
+            { img: "SHOOTING DAY 2.jpg", title: "Shooting Day 02", category: "Film Direction // Studio Set" },
+            { img: "STAGE DESIGN.jpg", title: "STAGE DESIGN", category: "INTERACTIVE PERFORMANCE // VIDEOGAME STORYTELLING" },
+            { img: "REPSOL MAPPING.jpg", title: "Repsol Projection Mapping", category: "Architectural Mapping // Lighting" },
+            { img: "STAGE DESIGN_3.jpg", title: "REPSOL STAGE DESIGN", category: "PROJECTION MAPPING" },
+            { img: "LIVE_2.jpg", title: "Live Broadcast Execution", category: "Master Control // Live Show" },
+            { img: "REPSOL SHOOTING DAY.jpg", title: "Repsol Film Shooting", category: "Audiovisual Production // Direction" },
+            { img: "REPSOL STORYBOARD.jpg", title: "Repsol Concept Storyboard", category: "Visual Narrative // Pre-Production" },
+            { 
+                img: "IBERJOYA 2005.jpg", 
+                title: "Iberjoya 2005", 
+                category: "Scenography // Stage Architecture",
+                position: "center 78%"
+            },
+            { img: "REPSOL SHOOTING DAY_3.jpg", title: "Repsol Shooting Day 03", category: "Film Direction // Camera Unit" },
+            { img: "WORK IN PROCESS_5.jpg", title: "Work In Process 05", category: "Backstage // Technical Setup" },
+            { img: "PHILIP MORRIS VIRTUAL STAGE_2.jpg", title: "Philip Morris Virtual Stage", category: "Virtual Production // Unreal Engine" },
+            { img: "SHOOTING DAY SAUDI ARABIA.jpg", title: "Shooting Day Saudi Arabia", category: "International Production // Film Set" },
+            { img: "LIVE_7.jpg", title: "Live Show Control 07", category: "Master Control // Live Show" }
+        ];
+
+        const slideshowContainer = document.getElementById('slideshow');
+        const progressBar = document.getElementById('progressBar');
+        let currentIndex = 0;
+        let isAnimating = false;
+
+        // INYECCIÓN DE DIAPOSITIVAS
+        slidesData.forEach((slide, idx) => {
+            const slideEl = document.createElement('div');
+            slideEl.className = `slide ${idx === 0 ? 'is-active' : ''}`;
+            const bgPosition = slide.position ? slide.position : 'center 12%';
+
+            slideEl.innerHTML = `
+                <div class="slide-img-wrap">
+                    <div class="slide-img" style="background-image: url('${encodeURI(slide.img)}'); background-position: ${bgPosition};"></div>
+                </div>
+                <div class="slide-overlay"></div>
+                <div class="slide-content">
+                    <div class="slide-counter">// ${(idx + 1).toString().padStart(2, '0')} &mdash; ${slidesData.length.toString().padStart(2, '0')}</div>
+                    <h2 class="slide-title">${slide.title}</h2>
+                    <div class="slide-category">${slide.category}</div>
+                </div>
+            `;
+            slideshowContainer.appendChild(slideEl);
+        });
+
+        const slides = document.querySelectorAll('.slide');
+
+        function updateProgress() {
+            const progress = ((currentIndex + 1) / slidesData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        updateProgress();
+
+        // NAVEGACIÓN PARALLAX HORIZONTAL (CODROPS DEMO 6)
+        function navigate(direction) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const nextIndex = direction === 'next'
+                ? (currentIndex + 1) % slidesData.length
+                : (currentIndex - 1 + slidesData.length) % slidesData.length;
+
+            const currentSlide = slides[currentIndex];
+            const nextSlide = slides[nextIndex];
+
+            const currentImgWrap = currentSlide.querySelector('.slide-img-wrap');
+            const nextImgWrap = nextSlide.querySelector('.slide-img-wrap');
+
+            const currentContent = currentSlide.querySelector('.slide-content');
+            const nextContent = nextSlide.querySelector('.slide-content');
+
+            // Parámetros de traslación horizontal
+            const slideXOut = direction === 'next' ? -100 : 100;
+            const slideXIn = direction === 'next' ? 100 : -100;
+
+            const parallaxXOut = direction === 'next' ? 18 : -18;
+            const parallaxXIn = direction === 'next' ? -18 : 18;
+
+            nextSlide.classList.add('is-active');
+            gsap.set(nextSlide, { xPercent: slideXIn, autoAlpha: 1 });
+            gsap.set(nextImgWrap, { xPercent: parallaxXIn });
+            gsap.set(nextContent, { xPercent: slideXIn * 0.25, opacity: 0 });
+
+            const tl = gsap.timeline({
+                defaults: { ease: 'power3.inOut', duration: 1.1 },
+                onComplete: () => {
+                    currentSlide.classList.remove('is-active');
+                    gsap.set(currentSlide, { autoAlpha: 0, xPercent: 0 });
+                    gsap.set(currentImgWrap, { xPercent: 0 });
+                    currentIndex = nextIndex;
+                    updateProgress();
+                    isAnimating = false;
+                }
+            });
+
+            tl.to(currentSlide, { xPercent: slideXOut }, 0)
+              .to(currentImgWrap, { xPercent: parallaxXOut }, 0)
+              .to(currentContent, { xPercent: slideXOut * 0.25, opacity: 0, duration: 0.7 }, 0);
+
+            tl.to(nextSlide, { xPercent: 0 }, 0)
+              .to(nextImgWrap, { xPercent: 0 }, 0)
+              .to(nextContent, { xPercent: 0, opacity: 1, duration: 0.9, delay: 0.12 }, 0);
+        }
+
+        // BOTONES
+        document.getElementById('nextBtn').addEventListener('click', () => navigate('next'));
+        document.getElementById('prevBtn').addEventListener('click', () => navigate('prev'));
+
+        // DETECCIÓN PRECISA DE TRACKPAD EN MACOS
+        let lastWheelTime = 0;
+        window.addEventListener('wheel', (e) => {
+            const now = performance.now();
+            if (now - lastWheelTime < 800) return;
+
+            const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+
+            if (Math.abs(delta) > 18) {
+                lastWheelTime = now;
+                if (delta > 0) {
+                    navigate('next');
+                } else {
+                    navigate('prev');
+                }
+            }
+        }, { passive: true });
+
+        // FLECHAS DE TECLADO
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate('next');
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate('prev');
+        });
+
+        // GESTOS TÁCTILES
+        let touchStartX = 0;
+        window.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        window.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 40) navigate('next');
+            if (touchEndX - touchStartX > 40) navigate('prev');
+        }, { passive: true });
+    </script>
+</body>
+</html>

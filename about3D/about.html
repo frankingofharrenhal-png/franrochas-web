@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fran Rochas | About</title>
+
+  <!-- Fuentes oficiales de la web -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+      color: #ffffff;
+      font-family: 'Space Grotesk', sans-serif;
+      overflow: hidden;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* TOP NAVIGATION */
+    .main-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 35px 20px 20px 20px;
+      display: flex;
+      justify-content: center;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 100%);
+      pointer-events: auto;
+    }
+
+    .main-nav ul {
+      display: flex;
+      list-style: none;
+      gap: 25px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-nav a {
+      position: relative;
+      display: inline-block;
+      padding: 6px 12px;
+      text-decoration: none;
+      outline: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.80rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: transparent;
+    }
+
+    .main-nav a span {
+      color: #ffffff;
+      position: relative;
+      z-index: 2;
+    }
+
+    .main-nav a:hover span,
+    .main-nav a.active span {
+      color: #000000;
+    }
+
+    .main-nav a::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background-color: #ffffff;
+      z-index: 1;
+      transition: height 0.25s ease;
+    }
+
+    .main-nav a:hover::before,
+    .main-nav a.active::before {
+      height: 100%;
+    }
+
+    /* IDENTIFICADOR DE MARCA INFERIOR */
+    .hero-brand-tag {
+      position: absolute;
+      bottom: 35px;
+      left: 40px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .brand-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.70rem;
+      color: #00ff41;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px rgba(0, 255, 65, 0.7);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    /* VENTANA MODAL */
+    #modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.94);
+      backdrop-filter: blur(14px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    #modal-content {
+      background: #0d0d0d;
+      border: 1px solid #262626;
+      width: 92vw;
+      max-width: 1250px;
+      max-height: 88vh;
+      display: flex;
+      gap: 40px;
+      padding: 40px;
+      border-radius: 8px;
+      color: #fff;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+      align-items: center;
+    }
+
+    #modal-image-container {
+      width: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-image {
+      width: 100%;
+      max-height: 75vh;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-radius: 4px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    }
+
+    #modal-info {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-height: 75vh;
+      overflow-y: auto;
+      padding-right: 12px;
+    }
+
+    #modal-info::-webkit-scrollbar {
+      width: 4px;
+    }
+    #modal-info::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 2px;
+    }
+
+    #modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.1rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      color: #e5b842;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    #modal-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 22px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.4;
+    }
+
+    #modal-awards {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    #modal-awards li {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: #ddd;
+      border-left: 2px solid #e5b842;
+      padding-left: 14px;
+    }
+
+    #modal-close {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      color: #888;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.4rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+      line-height: 1;
+      transition: color 0.2s ease;
+    }
+
+    #modal-close:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .hero-brand-tag {
+        bottom: 25px;
+        left: 25px;
+      }
+
+      .main-nav {
+        padding: 25px 10px;
+      }
+
+      .main-nav ul {
+        gap: 12px;
+      }
+
+      .main-nav a {
+        font-size: 0.70rem;
+        padding: 4px 8px;
+      }
+
+      #modal-content {
+        flex-direction: column;
+        padding: 24px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      #modal-image-container,
+      #modal-info {
+        width: 100%;
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+      }
+
+      #modal-title {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MENÚ SUPERIOR (CON ENLACES DE SALIDA ../ CORREGIDOS) -->
+  <nav class="main-nav">
+    <ul>
+      <li><a href="../index.html"><span>HOME</span></a></li>
+      <li><a href="../work.html"><span>WORK</span></a></li>
+      <li><a href="../ai-filmmaker.html"><span>A.I. FILMMAKER</span></a></li>
+      <li><a href="../behind-the-scenes.html"><span>BEHIND THE SCENES</span></a></li>
+      <li><a href="about.html" class="active"><span>ABOUT</span></a></li>
+      <li><a href="../contact.html"><span>CONTACT</span></a></li>
+    </ul>
+  </nav>
+
+  <!-- CONTENEDOR 3D -->
+  <div id="canvas-container"></div>
+
+  <!-- IDENTIFICADOR INFERIOR -->
+  <div class="hero-brand-tag">
+    <div class="brand-name">FRAN ROCHAS</div>
+    <div class="brand-sub">EVENTS // VIRTUAL PRODUCTION // A.I. CINEMA</div>
+  </div>
+
+  <!-- VENTANA MODAL -->
+  <div id="modal-overlay">
+    <div id="modal-content">
+      <button id="modal-close">&times;</button>
+      <div id="modal-image-container">
+        <img id="modal-image" src="" alt="Detalle del proyecto">
+      </div>
+      <div id="modal-info">
+        <h2 id="modal-title"></h2>
+        <h3 id="modal-subtitle"></h3>
+        <ul id="modal-awards"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js + Loaders + RoomEnvironment -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+
+  <script>
+    // 1. Catálogo editorial completo
+    const projectData = [
+      {
+        id: "repsol-2012-1",
+        image: "REPSOL_2012_1.jpg",
+        title: "European Best Event Awards",
+        clientYear: "Repsol 2012",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Internal Event / Convention)",
+          "GOLD (Staging / Set Design)",
+          "SILVER (European Best Event Award)",
+          "SILVER (Best Audio/Video/Lighting Production)"
+        ]
+      },
+      {
+        id: "perfil-fran-rochas",
+        image: "PERFIL.jpg",
+        title: "FRAN ROCHAS",
+        clientYear: "Show Director & Scenographic Designer",
+        agency: "EuBEA Awards Winner",
+        awards: [
+          "The Vision as a Show Director and Scenographic Designer based in Spain, I specialize in large-scale productions where structural engineering, industrial robotics, and visual narrative converge.",
+          "My work transforms physical spaces into immersive, high-impact environments, blending cinematic authorship with technical precision.",
+          "The approach with a background as a filmmaker and a deep understanding of technical creative leadership, I conceive every project as a total experience. From digital scenography for the Teatro Real to kinetic installations for BMW, my methodology integrates virtual production (Unreal Engine) and architectural projection mapping to engage audiences on a profound emotional level.",
+          "Global Impact I collaborate with leading international brands including Repsol, Acciona, Real Madrid, Huawei, and Peugeot developing shows that communicate innovation and excellence.",
+          "My creative process combines artistic sensibility with strategic thinking, delivering projects that elevate brand identity and transform spaces into powerful visual statements"
+        ]
+      },
+      {
+        id: "ncb-alpha-2020",
+        image: "NCB_ALPHA2024_1.jpg",
+        title: "Alpha. The Stars Seeker",
+        clientYear: "National Commercial Bank (2020)",
+        agency: "SmartWorks",
+        awards: [
+          "GOLD (Best Show) (Premios Eventoplus 2020)",
+          "SHORTLIST (Best Convention) (Bea World Festival 2020)"
+        ]
+      },
+      {
+        id: "peugeot-impresionarte-2008",
+        image: "IMPRESIONARTE_2008.jpg",
+        title: "IMPRESIONARTE",
+        clientYear: "2008. Peugeot",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Direction), European Best Event Awards, Turín 2008"
+        ]
+      },
+      {
+        id: "iberjoya-2007",
+        image: "IBERJOYA_2007_3.jpg",
+        title: "IBERJOYA",
+        clientYear: "2007. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Event Technology), European Best Event Awards, Milán 2007"
+        ]
+      },
+      {
+        id: "iberjoya-fip-2007",
+        image: "IBERJOYA_2007_2.jpg",
+        title: "IBERJOYA",
+        clientYear: "2007. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Event Technology), FIP Festival, Buenos Aires",
+          "SILVER (Best Original Idea), FIP Festival, Buenos Aires"
+        ]
+      },
+      {
+        id: "iberjoya-2008-alice",
+        image: "IBERJOYA_2008.jpg",
+        title: "IBERJOYA",
+        clientYear: "2008. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Scenography), \"Alice in Jewerland\" (European Best Event Awards, Turín 2008)"
+        ]
+      },
+      {
+        id: "iberjoya-eventplus-2007",
+        image: "IBERJOYA_2007.jpg",
+        title: "IBERJOYA",
+        clientYear: "2007. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus."
+        ]
+      },
+      {
+        id: "iberjoya-eventplus-2007-4",
+        image: "IBERJOYA_2007_4.jpg",
+        title: "IBERJOYA",
+        clientYear: "2007. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Eventoplus Awards"
+        ]
+      },
+      {
+        id: "peugeot-impresionarte-fip-2008",
+        image: "IMPRESIONARTE_2008_2.jpg",
+        title: "IMPRESIONARTE",
+        clientYear: "2008. Peugeot",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Corporate Event), FIP Festival, Buenos Aires 2008"
+        ]
+      },
+      {
+        id: "iberjoya-2008-fip-alice",
+        image: "IBERJOYA_2008_3.jpg",
+        title: "IBERJOYA",
+        clientYear: "2008. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Corporate Event), \"Alice in Jewerland\" (FIP Festival, Buenos Aires 2008)",
+          "SILVER (Best Idea), \"Alice in Jewerland\" (FIP Festival, Buenos Aires 2008)",
+          "BRONZE (Best Original Idea), \"Alice in Jewerland\" (FIP Festival, Buenos Aires 2008)"
+        ]
+      },
+      {
+        id: "repsol-2011-eubea",
+        image: "REPSOL2011_1.jpg",
+        title: "REPSOL",
+        clientYear: "2011. Repsol",
+        agency: "SCP",
+        awards: [
+          "SILVER (Best Audiovisual Production), \"The future is in your hands\" (European Best Event Awards, Milán 2011)"
+        ]
+      },
+      {
+        id: "repsol-2011-fip",
+        image: "REPSOL2011_3.jpg",
+        title: "REPSOL",
+        clientYear: "2011. Repsol",
+        agency: "SCP",
+        awards: [
+          "SILVER (Best Event Technology), \"The future is in your hands\" (FIP Festival, Buenos Aires 2011)"
+        ]
+      },
+      {
+        id: "wella-2011-eventplus",
+        image: "WELLA_2011_3.jpg",
+        title: "WELLA. P&G",
+        clientYear: "Madrid",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus"
+        ]
+      },
+      {
+        id: "wella-2011-1-eventplus",
+        image: "WELLA_2011_1.jpg",
+        title: "WELLA. P&G",
+        clientYear: "Madrid 2012",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus"
+        ]
+      },
+      {
+        id: "repsol-2013-eventplus",
+        image: "REPSOL_2013_1.jpg",
+        title: "REPSOL",
+        clientYear: "2013. Repsol",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Corporate Event), FIP Festival, Buenos Aires 2013"
+        ]
+      },
+      {
+        id: "repsol-2012-6-eventplus",
+        image: "REPSOL_2012_6.jpg",
+        title: "REPSOL",
+        clientYear: "2012. Repsol",
+        agency: "SCP",
+        awards: [
+          "GRAND PRIZE OF THE JURY, \"Innovar y Emprender\" (Premios Eventoplus, Madrid 2012)",
+          "SILVER (Best Event Technology), \"Innovar y Emprender\" (Premios Eventoplus, Madrid 2012)"
+        ]
+      },
+      {
+        id: "repsol-2012-3-eventplus",
+        image: "REPSOL_2012_3.jpg",
+        title: "REPSOL",
+        clientYear: "2012. Repsol",
+        agency: "SCP",
+        awards: [
+          "GRAND PRIZE OF THE JURY, \"Innovar y Emprender\" (Premios Eventoplus, Madrid 2012)",
+          "SILVER (Best Event Technology), \"Innovar y Emprender\" (Premios Eventoplus, Madrid 2012)"
+        ]
+      },
+      {
+        id: "repsol-2011-2-eubea",
+        image: "REPSOL2011_2.jpg",
+        title: "REPSOL",
+        clientYear: "2011. Repsol",
+        agency: "SCP",
+        awards: [
+          "SILVER (Best Audiovisual Production), \"The future is in your hands\" (European Best Event Awards, Milán 2011)"
+        ]
+      },
+      {
+        id: "repsol-2012-2-eubea",
+        image: "REPSOL_2012_2.jpg",
+        title: "REPSOL",
+        clientYear: "2012. Repsol",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Internal Event / Convention), European Best Event Awards, Milán 2012",
+          "GOLD (Staging / Set Design), European Best Event Awards, Milán 2012",
+          "SILVER (European Best Event Award), European Best Event Awards, Milán 2012",
+          "SILVER (Best Audio/Video/Lighting Production), European Best Event Awards, Milán 2012"
+        ]
+      },
+      {
+        id: "alcorcon-2014-fip",
+        image: "ALCORCON_2014.jpg",
+        title: "ALCORCÓN MAPPING",
+        clientYear: "2014. Alcorcón",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Night Event), FIP Festival, Buenos Aires 2014"
+        ]
+      },
+      {
+        id: "wella-2011-2-eventplus",
+        image: "WELLA_2011_2.jpg",
+        title: "WELLA. P&G",
+        clientYear: "Madrid 2012",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus"
+        ]
+      },
+      {
+        id: "repsol-2012-5-eubea",
+        image: "REPSOL_2012_5.jpg",
+        title: "REPSOL",
+        clientYear: "2012. Repsol",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Internal Event / Convention), European Best Event Awards, Milán 2012",
+          "GOLD (Staging / Set Design), European Best Event Awards, Milán 2012",
+          "SILVER (European Best Event Award), European Best Event Awards, Milán 2012",
+          "SILVER (Best Audio/Video/Lighting Production), European Best Event Awards, Milán 2012"
+        ]
+      },
+      {
+        id: "repsol-2012-4-eventplus",
+        image: "REPSOL_2012_4.jpg",
+        title: "REPSOL",
+        clientYear: "2012. Repsol",
+        agency: "SCP",
+        awards: [
+          "GRAND PRIZE OF THE JURY, \"Innovar y Emprender\" (Premios Eventoplus, Madrid 2012)",
+          "SILVER (Best Event Technology), \"Innovar y Emprender\" (Premios Eventoplus, Madrid 2012)"
+        ]
+      },
+      {
+        id: "peugeot-impresionarte-2008-5",
+        image: "IMPRESIONARTE_2008_5.jpg",
+        title: "IMPRESIONARTE",
+        clientYear: "2008. Peugeot",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Direction), European Best Event Awards, Turín 2008"
+        ]
+      },
+      {
+        id: "iberjoya-2008-1-eventplus",
+        image: "IBERJOYA_2008_1.jpg",
+        title: "IBERJOYA 08",
+        clientYear: "Madrid",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus"
+        ]
+      },
+      {
+        id: "iberjoya-2008-4-eventplus",
+        image: "IBERJOYA_2008_4.jpg",
+        title: "IBERJOYA 08",
+        clientYear: "Madrid",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus"
+        ]
+      },
+      {
+        id: "iqos3-2019-eventplus",
+        image: "IQOS3_2019_1.jpg",
+        title: "IQOS 3",
+        clientYear: "Madrid 2019. IQOS",
+        agency: "Metacción",
+        awards: [
+          "GOLD: Best Product Launch – Premios Eventoplus 2019"
+        ]
+      },
+      {
+        id: "iqos3-5-2019-eventplus",
+        image: "IQOS3_5.jpg",
+        title: "IQOS 3",
+        clientYear: "Madrid 2019. IQOS",
+        agency: "Metacción",
+        awards: [
+          "GOLD (Best Product Launch) – Premios Eventoplus, Madrid 2019"
+        ]
+      },
+      {
+        id: "iqos3-4-2019-eventplus",
+        image: "IQOS3_4.jpg",
+        title: "IQOS 3",
+        clientYear: "Madrid 2019. IQOS",
+        agency: "Metacción",
+        awards: [
+          "GOLD (Best Product Launch) – Premios Eventoplus, Madrid 2019"
+        ]
+      },
+      {
+        id: "iberjoya-2007-ib07-eubea",
+        image: "IB_07.jpg",
+        title: "IBERJOYA 07",
+        clientYear: "2007. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Event Technology), European Best Event Awards, Milán 2007"
+        ]
+      },
+      {
+        id: "iqos3-mapp-2019-eventplus",
+        image: "IQOS_3_MAPP.jpg",
+        title: "IQOS 3",
+        clientYear: "Madrid 2019. IQOS",
+        agency: "Metacción",
+        awards: [
+          "GOLD (Best Product Launch) – Premios Eventoplus, Madrid 2019"
+        ]
+      },
+      {
+        id: "iberjoya-2008-ib08-2-eventplus",
+        image: "IB08_2.jpg",
+        title: "IBERJOYA 08",
+        clientYear: "Madrid 2008. Iberjoya",
+        agency: "SCP",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus, Madrid 2008"
+        ]
+      },
+      {
+        id: "ncb-alpha-3-2020-eventplus",
+        image: "NCB_ALPHA_3.jpg",
+        title: "Alpha. The Stars Seeker",
+        clientYear: "National Commercial Bank (2020)",
+        agency: "SmartWorks",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus 2020"
+        ]
+      },
+      {
+        id: "ncb-alpha-2-2020-eventplus",
+        image: "NCB_ALPHA_2.jpg",
+        title: "Alpha. The Stars Seeker",
+        clientYear: "National Commercial Bank (2020)",
+        agency: "SmartWorks",
+        awards: [
+          "GOLD (Best Show), Premios Eventoplus 2020"
+        ]
+      },
+      {
+        id: "eurotaller-2024-eventplus",
+        image: "EUROTALLER_2.jpg",
+        title: "EUROTALLER",
+        clientYear: "2024. Eurotaller",
+        agency: "IAG7 + Pixel e Hijos",
+        awards: [
+          "GOLD (Best Convention) – Premios Eventoplus, Madrid 2024"
+        ]
+      },
+      {
+        id: "repsol-quimica-1",
+        image: "REPSOL_QUIMICA_1.jpg_2K_20261012200135.jpg",
+        title: "REPSOL QUÍMICA",
+        clientYear: "Madrid. Repsol Química",
+        agency: "Corporate Event",
+        awards: [
+          "Synchronized kinetic sculpture with screen and presentations"
+        ]
+      },
+      {
+        id: "repsol-quimica-2",
+        image: "REPSOL_QUIMICA_2.jpg",
+        title: "REPSOL QUÍMICA",
+        clientYear: "Madrid. Repsol Química",
+        agency: "Corporate Event",
+        awards: [
+          "Synchronized kinetic sculpture with screen and presentations"
+        ]
+      }
+    ];
+
+    // 2. Escena y Cámara
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 8.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    container.appendChild(renderer.domElement);
+
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const roomEnv = new THREE.RoomEnvironment();
+    scene.environment = pmremGenerator.fromScene(roomEnv).texture;
+
+    // Iluminación
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xfff3db, 3.4);
+    keyLight.position.set(6, 6, 6);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0x70aaff, 2.2);
+    rimLight.position.set(-6, -3, -4);
+    scene.add(rimLight);
+
+    const frontLight = new THREE.PointLight(0xffffff, 1.4, 15);
+    frontLight.position.set(0, 0, 5);
+    scene.add(frontLight);
+
+    // 3. Puntos dentro del túnel
+    const tunnelDotsCount = 650;
+    const tunnelDotsGeometry = new THREE.BufferGeometry();
+    const tunnelDotsPositions = new Float32Array(tunnelDotsCount * 3);
+    const tunnelDotsVelocities = new Float32Array(tunnelDotsCount * 3);
+
+    const tunnelInnerRadiusMin = 1.0;
+    const tunnelInnerRadiusMax = 3.9;
+    const tunnelHeightRange = 12.0;
+
+    for (let i = 0; i < tunnelDotsCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = tunnelInnerRadiusMin + Math.random() * (tunnelInnerRadiusMax - tunnelInnerRadiusMin);
+      const x = Math.sin(angle) * r;
+      const z = Math.cos(angle) * r;
+      const y = (Math.random() - 0.5) * tunnelHeightRange;
+
+      tunnelDotsPositions[i * 3] = x;
+      tunnelDotsPositions[i * 3 + 1] = y;
+      tunnelDotsPositions[i * 3 + 2] = z;
+
+      tunnelDotsVelocities[i * 3] = (Math.random() - 0.5) * 0.002;
+      tunnelDotsVelocities[i * 3 + 1] = 0.006 + Math.random() * 0.010;
+      tunnelDotsVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.002;
+    }
+
+    tunnelDotsGeometry.setAttribute('position', new THREE.BufferAttribute(tunnelDotsPositions, 3));
+    const tunnelDotsMaterial = new THREE.PointsMaterial({
+      color: 0xcccccc,
+      size: 0.045,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false
+    });
+    const tunnelDotsMesh = new THREE.Points(tunnelDotsGeometry, tunnelDotsMaterial);
+    scene.add(tunnelDotsMesh);
+
+    // 4. Trofeo central 3D
+    let trophyMesh = null;
+    const gltfLoader = new THREE.GLTFLoader();
+    gltfLoader.load('trofeo.glb', (gltf) => {
+      trophyMesh = gltf.scene;
+      const box = new THREE.Box3().setFromObject(trophyMesh);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+
+      trophyMesh.position.sub(center);
+      const maxAxis = Math.max(size.x, size.y, size.z);
+      if (maxAxis > 0) trophyMesh.scale.setScalar(2.6 / maxAxis);
+
+      trophyMesh.traverse((child) => {
+        if (child.isMesh) {
+          child.geometry.computeVertexNormals();
+          child.material = new THREE.MeshStandardMaterial({
+            color: new THREE.Color('#f0c441'),
+            metalness: 1.0,
+            roughness: 0.12,
+            envMapIntensity: 2.5
+          });
+        }
+      });
+      scene.add(trophyMesh);
+    });
+
+    // 5. Cilindro interactivo
+    const tubeGroup = new THREE.Group();
+    scene.add(tubeGroup);
+
+    const rows = 7;
+    const cols = 12;
+    const radius = 4.3;
+    const rowHeight = 1.6;
+    const totalHeight = rows * rowHeight;
+    const cardSize = 1.25;
+    const cardGeometry = new THREE.PlaneGeometry(cardSize, cardSize);
+
+    const interactiveMeshes = [];
+    const textureLoader = new THREE.TextureLoader();
+
+    // Precarga y corrección UV
+    const cachedMaterials = projectData.map(proj => {
+      const tex = textureLoader.load(proj.image);
+      tex.encoding = THREE.sRGBEncoding;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.repeat.x = -1;
+      return new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+    });
+
+    let itemIndex = 0;
+    for (let r = 0; r < rows; r++) {
+      const baseY = (r - (rows - 1) / 2) * rowHeight;
+
+      for (let c = 0; c < cols; c++) {
+        const angle = (c / cols) * Math.PI * 2;
+        const x = Math.sin(angle) * radius;
+        const z = Math.cos(angle) * radius;
+
+        let projIndex = null;
+
+        if (r === 3) {
+          projIndex = c;
+        } else if (r === 4) {
+          projIndex = 12 + c;
+        } else if (r === 2) {
+          projIndex = 24 + c;
+        } else if (r === 1) {
+          if (c === 0) projIndex = 36;
+          else if (c === 1) projIndex = 37;
+          else projIndex = (c - 2) % projectData.length;
+        } else {
+          projIndex = itemIndex % projectData.length;
+        }
+
+        const mat = cachedMaterials[projIndex];
+        const card = new THREE.Mesh(cardGeometry, mat);
+        card.position.set(x, baseY, z);
+        card.lookAt(0, baseY, 0);
+
+        card.userData = { 
+          index: itemIndex, 
+          projectIndex: projIndex,
+          baseY: baseY 
+        };
+
+        tubeGroup.add(card);
+        interactiveMeshes.push(card);
+        itemIndex++;
+      }
+    }
+
+    // 6. Navegación e Interacción
+    let targetRotationY = 0;
+    let targetTubeY = 0;
+    let isHovered = false;
+    let isModalOpen = false;
+    let hoveredCard = null;
+
+    let isDragging = false;
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+
+    window.addEventListener('mousedown', (e) => {
+      if (isModalOpen) return;
+      if (e.target.closest('.main-nav')) return;
+      isDragging = true;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('mouseleave', () => { isDragging = false; });
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2(0, 0);
+
+    window.addEventListener('mousemove', (e) => {
+      if (isModalOpen) return;
+
+      if (isDragging) {
+        const deltaX = e.clientX - prevMouseX;
+        const deltaY = e.clientY - prevMouseY;
+        targetRotationY += deltaX * 0.005;
+        targetTubeY -= deltaY * 0.008;
+        prevMouseX = e.clientX;
+        prevMouseY = e.clientY;
+      }
+
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(interactiveMeshes);
+
+      if (intersects.length > 0 && !e.target.closest('.main-nav')) {
+        isHovered = true;
+        document.body.style.cursor = 'pointer';
+        const currentCard = intersects[0].object;
+        if (hoveredCard !== currentCard) {
+          if (hoveredCard) hoveredCard.scale.set(1, 1, 1);
+          hoveredCard = currentCard;
+          hoveredCard.scale.set(1.08, 1.08, 1.08);
+        }
+      } else {
+        isHovered = false;
+        document.body.style.cursor = 'default';
+        if (hoveredCard) {
+          hoveredCard.scale.set(1, 1, 1);
+          hoveredCard = null;
+        }
+      }
+    });
+
+    window.addEventListener('wheel', (event) => {
+      if (isModalOpen) return;
+      targetRotationY += event.deltaY * 0.0022;
+      targetTubeY += event.deltaY * 0.004;
+    }, { passive: true });
+
+    window.addEventListener('click', (e) => {
+      if (isModalOpen) return;
+      if (e.target.closest('.main-nav')) return;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(interactiveMeshes);
+
+      if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        if (obj.userData.projectIndex !== null && projectData[obj.userData.projectIndex]) {
+          openModal(projectData[obj.userData.projectIndex]);
+        }
+      }
+    });
+
+    // 7. Modal
+    const modalOverlay = document.getElementById('modal-overlay');
+    function openModal(data) {
+      isModalOpen = true;
+      document.body.style.cursor = 'default';
+      document.getElementById('modal-image').src = data.image;
+      document.getElementById('modal-title').textContent = data.title;
+      document.getElementById('modal-subtitle').textContent = `${data.clientYear} // ${data.agency}`;
+      
+      const awardsList = document.getElementById('modal-awards');
+      awardsList.innerHTML = '';
+      data.awards.forEach(award => {
+        const li = document.createElement('li');
+        li.textContent = award;
+        awardsList.appendChild(li);
+      });
+
+      modalOverlay.style.display = 'flex';
+      setTimeout(() => { modalOverlay.style.opacity = '1'; }, 10);
+    }
+
+    function closeModal() {
+      modalOverlay.style.opacity = '0';
+      setTimeout(() => { 
+        modalOverlay.style.display = 'none'; 
+        isModalOpen = false;
+      }, 350);
+    }
+
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    // 8. Bucle de Animación
+    const tPositions = tunnelDotsGeometry.attributes.position.array;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const halfHeight = tunnelHeightRange / 2;
+      for (let i = 0; i < tunnelDotsCount; i++) {
+        const i3 = i * 3;
+
+        tPositions[i3 + 1] += tunnelDotsVelocities[i3 + 1];
+        if (tPositions[i3 + 1] > halfHeight) {
+          tPositions[i3 + 1] = -halfHeight;
+        }
+
+        const curX = tPositions[i3];
+        const curZ = tPositions[i3 + 2];
+        const cosAngle = Math.cos(0.003);
+        const sinAngle = Math.sin(0.003);
+        tPositions[i3] = curX * cosAngle - curZ * sinAngle;
+        tPositions[i3 + 2] = curX * sinAngle + curZ * cosAngle;
+      }
+      tunnelDotsGeometry.attributes.position.needsUpdate = true;
+
+      if (!isModalOpen) {
+        if (!isHovered && !isDragging) {
+          targetRotationY += 0.0016;
+        }
+
+        tubeGroup.rotation.y += (targetRotationY - tubeGroup.rotation.y) * 0.07;
+        tubeGroup.position.y += (targetTubeY - tubeGroup.position.y) * 0.07;
+
+        const halfSpan = totalHeight / 2;
+        interactiveMeshes.forEach(mesh => {
+          let worldY = mesh.userData.baseY + tubeGroup.position.y;
+          while (worldY > halfSpan) {
+            mesh.userData.baseY -= totalHeight;
+            worldY = mesh.userData.baseY + tubeGroup.position.y;
+          }
+          while (worldY < -halfSpan) {
+            mesh.userData.baseY += totalHeight;
+            worldY = mesh.userData.baseY + tubeGroup.position.y;
+          }
+          mesh.position.y = mesh.userData.baseY;
+          mesh.lookAt(0, mesh.position.y, 0);
+        });
+
+        if (trophyMesh) {
+          trophyMesh.rotation.y += 0.004;
+
+          const targetTiltX = mouse.y * 0.35;
+          const targetTiltZ = -mouse.x * 0.35;
+          trophyMesh.rotation.x += (targetTiltX - trophyMesh.rotation.x) * 0.08;
+          trophyMesh.rotation.z += (targetTiltZ - trophyMesh.rotation.z) * 0.08;
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

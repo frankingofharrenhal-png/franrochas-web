@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fran Rochas | Home</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+            cursor: ew-resize;
+            touch-action: pan-y;
+        }
+
+        /* TOP NAVIGATION */
+        .main-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 35px 20px 20px 20px;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: auto;
+            cursor: default;
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-nav a {
+            position: relative;
+            display: inline-block;
+            padding: 6px 12px;
+            text-decoration: none;
+            outline: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.80rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .main-nav a span {
+            color: #ffffff;
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-nav a:hover span,
+        .main-nav a.active span {
+            color: #000000;
+        }
+
+        .main-nav a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background-color: #ffffff;
+            z-index: 1;
+            transition: height 0.25s ease;
+        }
+
+        .main-nav a:hover::before,
+        .main-nav a.active::before {
+            height: 100%;
+        }
+
+        /* BACKGROUND VIDEO WRAPPER */
+        .hero-video-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .hero-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.85) contrast(1.05);
+            pointer-events: none;
+        }
+
+        /* SCANLINES OVERLAY */
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.8) 100%),
+                repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0px, rgba(0, 0, 0, 0.18) 1px, transparent 1px, transparent 3px);
+        }
+
+        /* BRANDING */
+        .hero-brand-tag {
+            position: absolute;
+            bottom: 35px;
+            left: 40px;
+            z-index: 10;
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+
+        .brand-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.70rem;
+            color: #00ff41;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(0, 255, 65, 0.7);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* PISTA TÁCTIL SUTIL SOLO EN MÓVIL */
+        .touch-hint {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            html, body {
+                cursor: default;
+            }
+
+            .main-nav {
+                padding: 18px 12px 14px 12px;
+            }
+
+            .main-nav ul {
+                flex-wrap: wrap;
+                gap: 6px 10px;
+                max-width: 100%;
+            }
+
+            .main-nav a {
+                font-size: 0.68rem;
+                letter-spacing: 1.5px;
+                padding: 5px 8px;
+            }
+
+            .hero-brand-tag {
+                bottom: 28px;
+                left: 22px;
+                right: 22px;
+            }
+
+            .brand-name {
+                font-size: 1.55rem;
+            }
+
+            .brand-sub {
+                font-size: 0.65rem;
+                letter-spacing: 1.5px;
+            }
+
+            .touch-hint {
+                display: block;
+                font-family: 'Space Mono', monospace;
+                font-size: 0.62rem;
+                color: rgba(255, 255, 255, 0.5);
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ SUPERIOR -->
+    <nav class="main-nav">
+        <ul>
+            <li><a href="index.html" class="active"><span>HOME</span></a></li>
+            <li><a href="work.html"><span>WORK</span></a></li>
+            <li><a href="behind-the-scenes.html"><span>BEHIND THE SCENES</span></a></li>
+            <li><a href="ai-filmmaker.html"><span>A.I. FILMMAKER</span></a></li>
+            <li><a href="about3D/about.html"><span>ABOUT</span></a></li>
+            <li><a href="contact.html"><span>CONTACT</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- VÍDEO DE FONDO -->
+    <div class="hero-video-container">
+        <video class="hero-video" id="heroVideo" muted playsinline preload="auto">
+            <source src="HOME WEB.mp4" type="video/mp4">
+            <source src="HOME_1_smooth.webm" type="video/webm">
+        </video>
+        <div class="hero-overlay"></div>
+    </div>
+
+    <!-- IDENTIFICADOR INFERIOR -->
+    <div class="hero-brand-tag">
+        <div class="brand-name">FRAN ROCHAS</div>
+        <div class="brand-sub">Creative Director</div>
+        <div class="touch-hint">&larr; SLIDE TO SCRUB &rarr;</div>
+    </div>
+
+    <!-- CONTROL SUAVE RATÓN + TÁCTIL MÓVIL -->
+    <script>
+        const video = document.getElementById('heroVideo');
+        video.pause();
+
+        let targetTime = 0;
+        let currentTime = 0;
+        let isSeeking = false;
+        let userInteracted = false;
+        let autoDirection = 1;
+
+        function setProgressFromClientX(clientX) {
+            if (!video.duration || isNaN(video.duration)) return;
+            userInteracted = true;
+            const progress = Math.max(0, Math.min(clientX / window.innerWidth, 1));
+            targetTime = progress * video.duration;
+        }
+
+        // Control ordenador (ratón)
+        window.addEventListener('mousemove', (e) => {
+            setProgressFromClientX(e.clientX);
+        }, { passive: true });
+
+        // Control móvil (dedo)
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.main-nav')) return;
+            if (e.touches.length > 0) {
+                setProgressFromClientX(e.touches[0].clientX);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.target.closest('.main-nav')) return;
+            if (e.touches.length > 0) {
+                setProgressFromClientX(e.touches[0].clientX);
+            }
+        }, { passive: true });
+
+        function updateVideoScrub() {
+            if (video.duration && !isNaN(video.duration)) {
+                // En móvil, avance automático suave hasta que el usuario toque la pantalla
+                if (!userInteracted && window.innerWidth <= 768) {
+                    targetTime += 0.016 * autoDirection;
+                    if (targetTime >= video.duration - 0.1) {
+                        targetTime = video.duration - 0.1;
+                        autoDirection = -1;
+                    } else if (targetTime <= 0.1) {
+                        targetTime = 0.1;
+                        autoDirection = 1;
+                    }
+                }
+
+                currentTime += (targetTime - currentTime) * 0.12;
+
+                if (Math.abs(video.currentTime - currentTime) > 0.03 && !isSeeking) {
+                    isSeeking = true;
+                    if ('fastSeek' in video) {
+                        video.fastSeek(currentTime);
+                    } else {
+                        video.currentTime = currentTime;
+                    }
+                }
+            }
+
+            requestAnimationFrame(updateVideoScrub);
+        }
+
+        video.addEventListener('seeked', () => {
+            isSeeking = false;
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            video.currentTime = 0;
+            requestAnimationFrame(updateVideoScrub);
+        });
+
+        if (video.readyState >= 1) {
+            requestAnimationFrame(updateVideoScrub);
+        }
+    </script>
+
+</body>
+</html>
