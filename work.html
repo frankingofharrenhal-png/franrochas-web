@@ -685,7 +685,6 @@
     </main>
 
     <script>
-        // CARGA AUTOMÁTICA DE FOTOS 9:16 DESDE LA CARPETA mobile/ SOLO EN MÓVIL
         const mobileAvailableImages = new Set([
             "REPSOL_2012_FONDO.jpg", "REPSOL_2014_fondo.jpg", "REPSOL_2011_2.jpg",
             "SANTALUCIA.jpg", "REPSOL_2013.jpg", "BMW_3.jpg", "ROSHN_.jpg",
@@ -710,7 +709,6 @@
             });
         }
         applyResponsiveImages();
-            if (window.innerWidth <= 768) { sphereMesh.scale.set(0.56, 0.56, 0.56); sphereMesh.position.set(0, 1.55, 0); } else { sphereMesh.scale.set(1, 1, 1); sphereMesh.position.set(0, 1.6, 0); }
 
         const container = document.getElementById('scroll-container');
         const indicatorContainer = document.getElementById('slide-indicator');
@@ -765,12 +763,18 @@
             emissiveIntensity: 0.45
         });
         const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-        sphereMesh.position.y = 1.6;
-        if (window.innerWidth <= 768) {
-            sphereMesh.scale.set(0.56, 0.56, 0.56);
-            sphereMesh.position.y = 1.55;
-        }
         sceneSphere.add(sphereMesh);
+
+        function syncSphereViewport() {
+            if (window.innerWidth <= 768) {
+                sphereMesh.scale.set(0.56, 0.56, 0.56);
+                sphereMesh.position.set(0, 1.55, 0);
+            } else {
+                sphereMesh.scale.set(1, 1, 1);
+                sphereMesh.position.set(0, 1.6, 0);
+            }
+        }
+        syncSphereViewport();
 
         const wireGeo = new THREE.WireframeGeometry(sphereGeo);
         const wireMat = new THREE.LineBasicMaterial({ color: 0x8ec7ff, transparent: true, opacity: 0.4 });
@@ -807,7 +811,7 @@
 
         window.addEventListener('resize', () => {
             applyResponsiveImages();
-            if (window.innerWidth <= 768) { sphereMesh.scale.set(0.56, 0.56, 0.56); sphereMesh.position.set(0, 1.55, 0); } else { sphereMesh.scale.set(1, 1, 1); sphereMesh.position.set(0, 1.6, 0); }
+            syncSphereViewport();
             cameraSphere.aspect = window.innerWidth / window.innerHeight;
             cameraSphere.updateProjectionMatrix();
             rendererSphere.setSize(window.innerWidth, window.innerHeight);
