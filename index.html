@@ -263,7 +263,7 @@
             opacity: 1;
             transform: scale(1);
         }
-        /* MODAL REPRODUCTOR REEL */
+        /* MODAL REPRODUCTOR REEL CON APERTURA PIXELADA */
         #reel-modal {
             position: fixed;
             inset: 0;
@@ -273,37 +273,117 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            padding: 20px;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.25s ease;
         }
         #reel-modal.open {
             display: flex;
+            opacity: 1;
+        }
+        #reel-stage {
+            position: relative;
+            width: 100%;
+            max-width: 1240px;
+            aspect-ratio: 16 / 9;
+            max-height: 78vh;
+            background: #050505;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.95);
+            overflow: hidden;
+        }
+        /* Esquinas de visor óptico minimalista */
+        #reel-stage::before,
+        #reel-stage::after {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            pointer-events: none;
+            z-index: 4;
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
         #reel-video-player {
             width: 100%;
-            max-width: 1280px;
-            max-height: 82vh;
+            height: 100%;
+            object-fit: contain;
             background: #000;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+            display: block;
+            cursor: pointer;
+        }
+        #reel-transition-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            image-rendering: pixelated;
+        }
+        /* Barra inferior minimalista */
+        #reel-hud {
+            width: 100%;
+            max-width: 1240px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 14px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.78);
+            z-index: 6;
+        }
+        #reel-play-toggle,
+        #reel-mute-toggle {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            padding: 4px 6px;
+            transition: opacity 0.2s ease;
+        }
+        #reel-play-toggle:hover,
+        #reel-mute-toggle:hover {
+            opacity: 0.65;
+        }
+        #reel-progress-wrap {
+            flex: 1;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        #reel-progress-track {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.22);
+            position: relative;
+        }
+        #reel-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #ffffff;
+            transition: width 0.08s linear;
         }
         #close-reel-btn {
             position: fixed;
             top: 24px;
             right: 28px;
-            background: rgba(0, 0, 0, 0.75);
+            background: transparent;
             color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.35);
+            border: none;
             font-family: 'Space Mono', monospace;
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            padding: 10px 18px;
+            font-size: 0.82rem;
+            letter-spacing: 2.5px;
+            padding: 8px 12px;
             cursor: pointer;
             z-index: 10000;
-            transition: all 0.2s ease;
+            transition: opacity 0.2s ease;
         }
         #close-reel-btn:hover {
-            border-color: #ffffff;
-            background: rgba(255, 255, 255, 0.12);
+            opacity: 0.6;
         }
         @media (max-width: 768px) {
             #face-reel-zone {
@@ -452,10 +532,23 @@
 
     <!-- REPRODUCTOR MODAL REEL 2027 -->
     <div id="reel-modal" aria-hidden="true">
-        <button id="close-reel-btn" type="button">[ &times; CERRAR REEL ]</button>
-        <video id="reel-video-player" playsinline controls preload="metadata">
-            <source src="REEL_2027.mp4" type="video/mp4">
-        </video>
+        <button id="close-reel-btn" type="button">[ &times; CERRAR ]</button>
+        <div id="reel-stage">
+            <video id="reel-video-player" playsinline preload="metadata">
+                <source src="REEL_2027.mp4" type="video/mp4">
+            </video>
+            <canvas id="reel-transition-canvas"></canvas>
+        </div>
+        <div id="reel-hud">
+            <button id="reel-play-toggle" type="button">PAUSE</button>
+            <span id="reel-timecode">00:00 / 00:00</span>
+            <div id="reel-progress-wrap">
+                <div id="reel-progress-track">
+                    <div id="reel-progress-fill"></div>
+                </div>
+            </div>
+            <button id="reel-mute-toggle" type="button">SOUND ON</button>
+        </div>
     </div>
 
     <script>
@@ -466,8 +559,16 @@
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
             const label = document.getElementById('face-reel-label');
             const modal = document.getElementById('reel-modal');
+            const reelStage = document.getElementById('reel-stage');
+            const transCanvas = document.getElementById('reel-transition-canvas');
+            const transCtx = transCanvas.getContext('2d');
             const reelPlayer = document.getElementById('reel-video-player');
             const closeBtn = document.getElementById('close-reel-btn');
+            const playToggle = document.getElementById('reel-play-toggle');
+            const muteToggle = document.getElementById('reel-mute-toggle');
+            const timecodeEl = document.getElementById('reel-timecode');
+            const progressWrap = document.getElementById('reel-progress-wrap');
+            const progressFill = document.getElementById('reel-progress-fill');
 
             const offCanvas = document.createElement('canvas');
             const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
@@ -503,7 +604,6 @@
                     canvas.height = Math.round(rect.height);
                 }
 
-                // Tamaño de bloque grande animado entre 14px y 26px
                 const pulse = (Math.sin(timestamp * 0.0055) + 1) * 0.5;
                 const blockSize = Math.round(14 + pulse * 12);
 
@@ -518,7 +618,6 @@
                     const winW = window.innerWidth;
                     const winH = window.innerHeight;
 
-                    // Mapeo exacto considerando object-fit: cover
                     const scale = Math.max(winW / vw, winH / vh);
                     const renderedW = vw * scale;
                     const renderedH = vh * scale;
@@ -534,7 +633,6 @@
                     const imgData = offCtx.getImageData(0, 0, cols, rows);
                     const data = imgData.data;
 
-                    // Micro-variación orgánica usando solo los tonos reales de la cara
                     for (let i = 0; i < data.length; i += 4) {
                         const jitter = (Math.sin(timestamp * 0.01 + i) * 14);
                         data[i] = Math.min(255, Math.max(0, data[i] + jitter));
@@ -583,17 +681,119 @@
             window.addEventListener('resize', syncMobileState);
             syncMobileState();
 
+            // Animación de barrido pixelado al abrir y cerrar el reproductor
+            function runPixelTransition(isOpening, onComplete) {
+                const rect = reelStage.getBoundingClientRect();
+                transCanvas.width = Math.max(320, Math.round(rect.width));
+                transCanvas.height = Math.max(180, Math.round(rect.height));
+
+                const block = 32;
+                const cols = Math.ceil(transCanvas.width / block);
+                const rows = Math.ceil(transCanvas.height / block);
+                const cells = [];
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        cells.push({
+                            x: c * block,
+                            y: r * block,
+                            threshold: Math.random(),
+                            shade: Math.floor(15 + Math.random() * 45)
+                        });
+                    }
+                }
+
+                const duration = 520;
+                const startTime = performance.now();
+
+                function step(now) {
+                    const t = Math.min(1, (now - startTime) / duration);
+                    transCtx.clearRect(0, 0, transCanvas.width, transCanvas.height);
+
+                    for (let i = 0; i < cells.length; i++) {
+                        const cell = cells[i];
+                        const visible = isOpening ? (cell.threshold > t) : (cell.threshold <= t);
+                        if (visible) {
+                            const s = cell.shade;
+                            transCtx.fillStyle = `rgb(${s}, ${s}, ${s + 4})`;
+                            transCtx.fillRect(cell.x, cell.y, block, block);
+                        }
+                    }
+
+                    if (t < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        if (isOpening) transCtx.clearRect(0, 0, transCanvas.width, transCanvas.height);
+                        if (onComplete) onComplete();
+                    }
+                }
+                requestAnimationFrame(step);
+            }
+
+            function formatTime(sec) {
+                if (!isFinite(sec)) return '00:00';
+                const m = Math.floor(sec / 60);
+                const s = Math.floor(sec % 60);
+                return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+            }
+
+            reelPlayer.addEventListener('timeupdate', () => {
+                const pct = reelPlayer.duration ? (reelPlayer.currentTime / reelPlayer.duration) * 100 : 0;
+                progressFill.style.width = pct + '%';
+                timecodeEl.textContent = formatTime(reelPlayer.currentTime) + ' / ' + formatTime(reelPlayer.duration);
+            });
+
+            reelPlayer.addEventListener('ended', () => {
+                playToggle.textContent = 'REPLAY';
+            });
+
+            function togglePlay() {
+                if (reelPlayer.paused) {
+                    reelPlayer.play();
+                    playToggle.textContent = 'PAUSE';
+                } else {
+                    reelPlayer.pause();
+                    playToggle.textContent = 'PLAY';
+                }
+            }
+
+            playToggle.addEventListener('click', togglePlay);
+            reelPlayer.addEventListener('click', togglePlay);
+
+            muteToggle.addEventListener('click', () => {
+                reelPlayer.muted = !reelPlayer.muted;
+                muteToggle.textContent = reelPlayer.muted ? 'MUTED' : 'SOUND ON';
+            });
+
+            progressWrap.addEventListener('click', (e) => {
+                const rect = progressWrap.getBoundingClientRect();
+                const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                if (reelPlayer.duration) {
+                    reelPlayer.currentTime = ratio * reelPlayer.duration;
+                }
+            });
+
             function openReel() {
                 modal.classList.add('open');
                 modal.setAttribute('aria-hidden', 'false');
                 reelPlayer.currentTime = 0;
-                reelPlayer.play().catch(() => {});
+                reelPlayer.muted = false;
+                muteToggle.textContent = 'SOUND ON';
+                playToggle.textContent = 'PAUSE';
+                reelPlayer.play().catch(() => {
+                    reelPlayer.muted = true;
+                    muteToggle.textContent = 'MUTED';
+                    reelPlayer.play().catch(() => {});
+                });
+                requestAnimationFrame(() => runPixelTransition(true));
             }
 
             function closeReel() {
-                reelPlayer.pause();
-                modal.classList.remove('open');
-                modal.setAttribute('aria-hidden', 'true');
+                runPixelTransition(false, () => {
+                    reelPlayer.pause();
+                    modal.classList.remove('open');
+                    modal.setAttribute('aria-hidden', 'true');
+                });
             }
 
             zone.addEventListener('click', openReel);
@@ -603,6 +803,10 @@
             });
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && modal.classList.contains('open')) closeReel();
+                if (e.key === ' ' && modal.classList.contains('open')) {
+                    e.preventDefault();
+                    togglePlay();
+                }
             });
         })();
     </script>
