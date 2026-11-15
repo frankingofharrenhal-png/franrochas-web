@@ -267,7 +267,7 @@
         #reel-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.96);
+            background: #000000;
             z-index: 9999;
             display: none;
             align-items: center;
@@ -681,40 +681,57 @@
             window.addEventListener('resize', syncMobileState);
             syncMobileState();
 
-            // Animación de barrido pixelado tomando los colores reales del vídeo activo
+            // Animación de barrido pixelado con muestreo real del fotograma activo
             const transSampleCanvas = document.createElement('canvas');
             const transSampleCtx = transSampleCanvas.getContext('2d', { willReadFrequently: true });
+
+            function sampleVideoColors(videoEl, cols, rows, fallbackPalette) {
+                transSampleCanvas.width = cols;
+                transSampleCanvas.height = rows;
+                try {
+                    if (videoEl && videoEl.readyState >= 2 && videoEl.videoWidth > 0) {
+                        transSampleCtx.drawImage(videoEl, 0, 0, cols, rows);
+                        const data = transSampleCtx.getImageData(0, 0, cols, rows).data;
+                        // Verificar que no sea un fotograma vacío/negro total
+                        let sum = 0;
+                        for (let i = 0; i < data.length; i += 16) {
+                            sum += data[i] + data[i + 1] + data[i + 2];
+                        }
+                        if (sum > 80) return data;
+                    }
+                } catch (e) {}
+                return null;
+            }
 
             function runPixelTransition(isOpening, onComplete) {
                 const rect = reelStage.getBoundingClientRect();
                 transCanvas.width = Math.max(320, Math.round(rect.width));
                 transCanvas.height = Math.max(180, Math.round(rect.height));
 
-                const block = 34;
+                const block = 32;
                 const cols = Math.ceil(transCanvas.width / block);
                 const rows = Math.ceil(transCanvas.height / block);
 
-                transSampleCanvas.width = cols;
-                transSampleCanvas.height = rows;
+                const fallbackPalette = isOpening
+                    ? [[18, 44, 54], [38, 86, 98], [130, 175, 185], [168, 128, 102], [12, 22, 28]]
+                    : [[212, 148, 24], [156, 98, 18], [42, 54, 48], [242, 198, 65], [14, 20, 24]];
 
-                // Elegir la fuente de vídeo real: portada al abrir, reel al cerrar
-                const sourceVideo = (isOpening ? heroVideo : reelPlayer);
-                let pixelData = null;
-
-                if (sourceVideo && sourceVideo.readyState >= 2 && sourceVideo.videoWidth > 0) {
-                    transSampleCtx.drawImage(sourceVideo, 0, 0, cols, rows);
-                    pixelData = transSampleCtx.getImageData(0, 0, cols, rows).data;
-                }
+                const sourceVideo = isOpening ? heroVideo : reelPlayer;
+                const pixelData = sampleVideoColors(sourceVideo, cols, rows, fallbackPalette);
 
                 const cells = [];
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
-                        let rCol = 20, gCol = 22, bCol = 26;
+                        let rCol, gCol, bCol;
                         if (pixelData) {
                             const idx = (r * cols + c) * 4;
-                            rCol = pixelData[idx];
-                            gCol = pixelData[idx + 1];
-                            bCol = pixelData[idx + 2];
+                            // Realzar ligeramente la saturación y luminancia para que los bloques luzcan vivos
+                            rCol = Math.min(255, Math.round(pixelData[idx] * 1.15));
+                            gCol = Math.min(255, Math.round(pixelData[idx + 1] * 1.15));
+                            bCol = Math.min(255, Math.round(pixelData[idx + 2] * 1.15));
+                        } else {
+                            const p = fallbackPalette[Math.floor(Math.random() * fallbackPalette.length)];
+                            rCol = p[0]; gCol = p[1]; bCol = p[2];
                         }
                         cells.push({
                             x: c * block,
