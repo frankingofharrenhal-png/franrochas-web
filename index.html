@@ -712,12 +712,18 @@
                 const cols = Math.ceil(transCanvas.width / block);
                 const rows = Math.ceil(transCanvas.height / block);
 
-                const fallbackPalette = isOpening
-                    ? [[18, 44, 54], [38, 86, 98], [130, 175, 185], [168, 128, 102], [12, 22, 28]]
-                    : [[212, 148, 24], [156, 98, 18], [42, 54, 48], [242, 198, 65], [14, 20, 24]];
+                // Paleta dorada del águila sobre la pantalla de agua (apertura) y escena activa (cierre)
+                const eagleWaterPalette = [
+                    [245, 194, 36],   // Dorado brillante del águila
+                    [218, 128, 12],   // Ámbar luminoso
+                    [148, 84, 10],    // Reflejo oro en el agua
+                    [255, 224, 92],   // Destello alto
+                    [10, 22, 34],     // Azul noche del fondo
+                    [18, 36, 48]      // Agua oscura
+                ];
 
-                const sourceVideo = isOpening ? heroVideo : reelPlayer;
-                const pixelData = sampleVideoColors(sourceVideo, cols, rows, fallbackPalette);
+                // Muestreamos siempre reelPlayer (al abrir toma el águila dorada del inicio; al cerrar el fotograma actual)
+                const pixelData = sampleVideoColors(reelPlayer, cols, rows, eagleWaterPalette);
 
                 const cells = [];
                 for (let r = 0; r < rows; r++) {
@@ -725,12 +731,17 @@
                         let rCol, gCol, bCol;
                         if (pixelData) {
                             const idx = (r * cols + c) * 4;
-                            // Realzar ligeramente la saturación y luminancia para que los bloques luzcan vivos
-                            rCol = Math.min(255, Math.round(pixelData[idx] * 1.15));
+                            rCol = Math.min(255, Math.round(pixelData[idx] * 1.2));
                             gCol = Math.min(255, Math.round(pixelData[idx + 1] * 1.15));
-                            bCol = Math.min(255, Math.round(pixelData[idx + 2] * 1.15));
+                            bCol = Math.min(255, Math.round(pixelData[idx + 2] * 1.1));
                         } else {
-                            const p = fallbackPalette[Math.floor(Math.random() * fallbackPalette.length)];
+                            // Distribución orgánica con el arco dorado del águila en el centro-izquierda y agua oscura alrededor
+                            const nx = c / cols;
+                            const ny = r / rows;
+                            const inEagleArc = (nx > 0.12 && nx < 0.65 && ny > 0.22 && ny < 0.72);
+                            const p = inEagleArc
+                                ? eagleWaterPalette[Math.floor(Math.random() * 4)]
+                                : eagleWaterPalette[4 + Math.floor(Math.random() * 2)];
                             rCol = p[0]; gCol = p[1]; bCol = p[2];
                         }
                         cells.push({
@@ -742,7 +753,7 @@
                     }
                 }
 
-                const duration = 560;
+                const duration = 620;
                 const startTime = performance.now();
 
                 function step(now) {
@@ -818,12 +829,21 @@
                 reelPlayer.muted = false;
                 muteToggle.textContent = 'SOUND ON';
                 playToggle.textContent = 'PAUSE';
+
+                let started = false;
+                const startOpeningReveal = () => {
+                    if (started) return;
+                    started = true;
+                    runPixelTransition(true);
+                };
+
+                reelPlayer.addEventListener('playing', startOpeningReveal, { once: true });
                 reelPlayer.play().catch(() => {
                     reelPlayer.muted = true;
                     muteToggle.textContent = 'MUTED';
                     reelPlayer.play().catch(() => {});
                 });
-                requestAnimationFrame(() => runPixelTransition(true));
+                setTimeout(startOpeningReveal, 140);
             }
 
             function closeReel() {
