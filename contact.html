@@ -16,16 +16,21 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
+        iframe[src*="netlify"],
+        #netlify-identity-widget,
+        [data-netlify-deploy-id] {
+            display: none !important;
+        }
         .main-nav {
             position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
             padding: 35px 20px 20px 20px; display: flex; justify-content: center;
             background: linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
         }
-        .main-nav ul { display: flex; list-style: none; gap: 25px; align-items: center; }
+        .main-nav ul { display: flex; list-style: none; gap: 25px; align-items: center; justify-content: center; }
         .main-nav a {
-            position: relative; padding: 6px 12px; text-decoration: none;
+            position: relative; display: inline-block; padding: 6px 12px; text-decoration: none;
             font-size: 0.80rem; font-weight: 500; letter-spacing: 2px;
-            text-transform: uppercase; color: #ffffff;
+            text-transform: uppercase; color: #ffffff; white-space: nowrap;
         }
         .main-nav a span { position: relative; z-index: 2; }
         .main-nav a:hover span, .main-nav a.active span { color: #000000; }
@@ -77,6 +82,9 @@
         .btn-minimal:hover { background: #ffffff; color: #000000; border-color: #ffffff; }
 
         @media (max-width: 768px) {
+            .main-nav { padding: 18px 10px 12px 10px; }
+            .main-nav ul { flex-wrap: wrap; gap: 6px 8px; max-width: 100%; }
+            .main-nav a { font-size: 0.66rem; letter-spacing: 1.5px; padding: 5px 8px; }
             .form-row { grid-template-columns: 1fr; gap: 30px; }
             .contact-meta { flex-direction: column; gap: 10px; }
         }
@@ -87,8 +95,8 @@
         <ul>
             <li><a href="index.html"><span>HOME</span></a></li>
             <li><a href="work.html"><span>WORK</span></a></li>
-            <li><a href="ai-filmmaker.html"><span>A.I. FILMMAKER</span></a></li>
             <li><a href="behind-the-scenes.html"><span>BEHIND THE SCENES</span></a></li>
+            <li><a href="ai-filmmaker.html"><span>A.I. FILMMAKER</span></a></li>
             <li><a href="about3D/about.html"><span>ABOUT</span></a></li>
             <li><a href="contact.html" class="active"><span>CONTACT</span></a></li>
         </ul>

@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fran Rochas | Selected Works</title>
 
-    <!-- Fuentes de Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
-    <!-- Three.js (Para la Esfera 3D del Proyecto 01) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
@@ -29,6 +27,12 @@
             overflow: hidden;
         }
 
+        iframe[src*="netlify"],
+        #netlify-identity-widget,
+        [data-netlify-deploy-id] {
+            display: none !important;
+        }
+
         /* MENÚ FLOTANTE */
         .main-nav {
             position: fixed !important;
@@ -39,7 +43,7 @@
             padding: 35px 20px 20px 20px !important;
             display: flex !important;
             justify-content: center !important;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%) !important;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 100%) !important;
             pointer-events: auto;
         }
 
@@ -63,6 +67,7 @@
             text-transform: uppercase !important;
             color: #ffffff !important;
             background: transparent !important;
+            white-space: nowrap;
         }
 
         .main-nav a span {
@@ -174,7 +179,6 @@
             filter: brightness(0.68) contrast(1.12);
         }
 
-        /* CANVAS WEBGL PARA LA ESFERA (01) */
         .webgl-canvas {
             position: absolute;
             top: 0;
@@ -186,7 +190,6 @@
             pointer-events: none;
         }
 
-        /* CAPA ELEMENTO DELANTERO 2.5D */
         .layer-fg {
             position: absolute;
             top: 0;
@@ -203,7 +206,6 @@
             transform-style: preserve-3d;
         }
 
-        /* BALLENA REAL (PROYECTO 02) */
         .layer-fg.whale-layer img {
             max-width: 86%;
             max-height: 86%;
@@ -212,7 +214,6 @@
             animation: whaleFloat 5.5s ease-in-out infinite alternate;
         }
 
-        /* ANILLO REAL (PROYECTO 18) */
         .layer-fg.ring-layer img {
             max-width: 90%;
             max-height: 90%;
@@ -308,22 +309,71 @@
         }
 
         @media (max-width: 768px) {
-            .main-nav { padding: 20px 10px 10px 10px !important; }
-            .main-nav ul { gap: 10px !important; }
-            .main-nav a { padding: 4px 6px !important; font-size: 0.60rem !important; }
-            .project-content { padding: 40px 20px; }
-            .project-title { font-size: 2rem; }
-            .project-category { font-size: 0.70rem; }
-            .slide-indicator { right: 15px; gap: 6px; }
-            .indicator-dot { width: 5px; height: 5px; }
-            .project-bg, .layer-bg { top: 0; height: 100%; }
-            .layer-fg img { max-width: 95%; animation: none; }
+            .main-nav {
+                padding: 18px 10px 12px 10px !important;
+            }
+            .main-nav ul {
+                flex-wrap: wrap !important;
+                gap: 6px 8px !important;
+                max-width: 100% !important;
+            }
+            .main-nav a {
+                font-size: 0.66rem !important;
+                letter-spacing: 1.5px !important;
+                padding: 5px 8px !important;
+            }
+            .work-fullscreen-container,
+            .project-slide {
+                height: 100dvh;
+            }
+            .project-content {
+                padding: 45px 34px 36px 20px;
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.55) 65%, rgba(0, 0, 0, 0) 100%);
+            }
+            .project-meta {
+                width: 100%;
+                max-width: 100%;
+            }
+            .project-index {
+                font-size: 0.75rem;
+                margin-bottom: 6px;
+            }
+            .project-title {
+                font-size: clamp(1.35rem, 6.2vw, 1.85rem);
+                line-height: 1.08;
+                letter-spacing: -0.5px;
+                margin-bottom: 8px;
+                overflow-wrap: break-word;
+                word-break: normal;
+            }
+            .project-category {
+                font-size: 0.68rem;
+                letter-spacing: 1.8px;
+                line-height: 1.35;
+            }
+            .slide-indicator {
+                right: 10px;
+                gap: 5px;
+            }
+            .indicator-dot {
+                width: 4px;
+                height: 4px;
+            }
+            .project-bg, .layer-bg {
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            .layer-fg img {
+                max-width: 92%;
+                animation: none;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- MENÚ FLOTANTE -->
     <nav class="main-nav">
         <ul>
             <li><a href="index.html"><span>HOME</span></a></li>
@@ -335,10 +385,8 @@
         </ul>
     </nav>
 
-    <!-- INDICADOR LATERAL -->
     <div class="slide-indicator" id="slide-indicator"></div>
 
-    <!-- CONTENEDOR FULL-SCREEN -->
     <main class="work-fullscreen-container" id="scroll-container">
         
         <!-- PROYECTO 01: REPSOL 2012 (Three.js Esfera 3D) -->
@@ -637,18 +685,42 @@
     </main>
 
     <script>
+        // CARGA AUTOMÁTICA DE FOTOS 9:16 DESDE LA CARPETA mobile/ SOLO EN MÓVIL
+        const mobileAvailableImages = new Set([
+            "REPSOL_2012_FONDO.jpg", "REPSOL_2014_fondo.jpg", "REPSOL_2011_2.jpg",
+            "SANTALUCIA.jpg", "REPSOL_2013.jpg", "BMW_3.jpg", "ROSHN_.jpg",
+            "IQOS3_2.jpg", "MAPPING ALCORCON.jpg", "NCB_VIENA_3.jpg", "NCB_MNAC.jpg",
+            "NCB_ATENAS.jpg", "REPSOL_QUIMICA.jpg", "IBERJOYA_2008.jpg",
+            "IBERJOYA_2007.1.jpg", "TEATRO_REAL_1.jpg", "IBERJOYA_2005_FONDO.jpg",
+            "MARLBORO_2.jpg", "MARLBORO.jpg"
+        ]);
+
+        function applyResponsiveImages() {
+            const isMobile = window.innerWidth <= 768;
+            document.querySelectorAll('.project-bg img, .layer-bg img').forEach(img => {
+                if (!img.dataset.desktopSrc) {
+                    img.dataset.desktopSrc = img.getAttribute('src');
+                }
+                const file = img.dataset.desktopSrc;
+                if (isMobile && mobileAvailableImages.has(file)) {
+                    img.src = 'mobile/' + encodeURI(file);
+                } else {
+                    img.src = encodeURI(file);
+                }
+            });
+        }
+        applyResponsiveImages();
+
         const container = document.getElementById('scroll-container');
         const indicatorContainer = document.getElementById('slide-indicator');
         const slides = document.querySelectorAll('.project-slide');
         
-        // Elementos Multicapa activos
-        const sphereBg = document.getElementById('sphere-bg'); // Proyecto 01
-        const stageBg = document.getElementById('stage-bg'); // Proyecto 02
-        const whaleFg = document.getElementById('whale-fg'); // Proyecto 02 (PNG Real)
-        const ringFg = document.getElementById('ring-fg'); // Proyecto 18
-        const ringBg = document.getElementById('ring-bg'); // Proyecto 18
+        const sphereBg = document.getElementById('sphere-bg');
+        const stageBg = document.getElementById('stage-bg');
+        const whaleFg = document.getElementById('whale-fg');
+        const ringFg = document.getElementById('ring-fg');
+        const ringBg = document.getElementById('ring-bg');
 
-        // Generar puntos laterales interactivos
         slides.forEach((_, index) => {
             const dot = document.createElement('div');
             dot.classList.add('indicator-dot');
@@ -671,9 +743,7 @@
             updateParallax();
         });
 
-        // -------------------------------------------------------------
         // MOTOR THREE.JS: ESFERA 3D GEOMÉTRICA (PROYECTO 01)
-        // -------------------------------------------------------------
         const canvasSphere = document.getElementById('sphere-3d-canvas');
         const sceneSphere = new THREE.Scene();
         const cameraSphere = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -731,18 +801,16 @@
         animateSphere();
 
         window.addEventListener('resize', () => {
+            applyResponsiveImages();
             cameraSphere.aspect = window.innerWidth / window.innerHeight;
             cameraSphere.updateProjectionMatrix();
             rendererSphere.setSize(window.innerWidth, window.innerHeight);
             updateParallax();
         });
 
-        // -------------------------------------------------------------
-        // PARALLAX & SCROLL MANAGER
-        // -------------------------------------------------------------
         function updateParallax() {
             const scrollPosition = container.scrollTop;
-            const height = window.innerHeight;
+            const height = container.clientHeight || window.innerHeight;
             const activeIndex = Math.round(scrollPosition / height);
 
             dots.forEach((dot, index) => {
@@ -755,7 +823,6 @@
 
             if (window.innerWidth <= 768) return;
 
-            // Rotación 3D para la Esfera
             sphereTargetRotY = normX * 0.35;
             sphereTargetRotX = normY * -0.25;
 
@@ -763,13 +830,11 @@
                 const relativeScroll = scrollPosition - (index * height);
                 const content = slide.querySelector('.project-content');
                 
-                // Fondo estándar
                 const bg = slide.querySelector('.project-bg');
                 if (bg) {
                     bg.style.transform = `translate3d(0, ${relativeScroll * 0.12}px, 0)`;
                 }
 
-                // 1. Repsol Esfera 3D (Proyecto 01)
                 if (slide === slides[0]) {
                     if (sphereBg) {
                         const bgX = normX * 18;
@@ -783,7 +848,6 @@
                     }
                 }
 
-                // 2. Repsol Ballena REAL (Proyecto 02)
                 if (slide === slides[1]) {
                     const scrollShift = relativeScroll * 0.28;
                     if (stageBg) {
@@ -801,7 +865,6 @@
                     }
                 }
 
-                // 3. Iberjoya Anillo (Proyecto 18)
                 if (slide === slides[17]) {
                     const scrollShift = relativeScroll * 0.48;
                     if (ringBg) {
@@ -819,7 +882,6 @@
                     }
                 }
 
-                // Bloque de texto
                 if (content) {
                     content.style.transform = `translate3d(0, ${relativeScroll * -0.14}px, 0)`;
                 }
@@ -827,7 +889,6 @@
         }
 
         container.addEventListener('scroll', updateParallax);
-        window.addEventListener('resize', updateParallax);
         updateParallax();
     </script>
 </body>

@@ -24,7 +24,17 @@
             font-family: 'Space Grotesk', sans-serif;
             overflow: hidden;
             cursor: ew-resize;
-            touch-action: pan-y;
+            touch-action: none;
+        }
+
+        /* OCULTAR POSIBLE DRAWER INYECTADO POR NETLIFY */
+        iframe[src*="netlify"],
+        #netlify-identity-widget,
+        [data-netlify-deploy-id] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
 
         /* TOP NAVIGATION */
@@ -154,28 +164,28 @@
             text-transform: uppercase;
         }
 
-        /* PISTA TÁCTIL SUTIL SOLO EN MÓVIL */
         .touch-hint {
             display: none;
         }
 
         @media (max-width: 768px) {
             html, body {
+                height: 100dvh;
                 cursor: default;
             }
 
             .main-nav {
-                padding: 18px 12px 14px 12px;
+                padding: 18px 10px 12px 10px;
             }
 
             .main-nav ul {
                 flex-wrap: wrap;
-                gap: 6px 10px;
+                gap: 6px 8px;
                 max-width: 100%;
             }
 
             .main-nav a {
-                font-size: 0.68rem;
+                font-size: 0.66rem;
                 letter-spacing: 1.5px;
                 padding: 5px 8px;
             }
@@ -199,7 +209,7 @@
                 display: block;
                 font-family: 'Space Mono', monospace;
                 font-size: 0.62rem;
-                color: rgba(255, 255, 255, 0.5);
+                color: rgba(255, 255, 255, 0.55);
                 letter-spacing: 2px;
                 text-transform: uppercase;
                 margin-top: 8px;
@@ -209,7 +219,6 @@
 </head>
 <body>
 
-    <!-- MENÚ SUPERIOR -->
     <nav class="main-nav">
         <ul>
             <li><a href="index.html" class="active"><span>HOME</span></a></li>
@@ -221,23 +230,20 @@
         </ul>
     </nav>
 
-    <!-- VÍDEO DE FONDO -->
     <div class="hero-video-container">
-        <video class="hero-video" id="heroVideo" muted playsinline preload="auto">
+        <video class="hero-video" id="heroVideo" muted playsinline webkit-playsinline preload="auto">
             <source src="HOME WEB.mp4" type="video/mp4">
             <source src="HOME_1_smooth.webm" type="video/webm">
         </video>
         <div class="hero-overlay"></div>
     </div>
 
-    <!-- IDENTIFICADOR INFERIOR -->
     <div class="hero-brand-tag">
         <div class="brand-name">FRAN ROCHAS</div>
         <div class="brand-sub">Creative Director</div>
         <div class="touch-hint">&larr; SLIDE TO SCRUB &rarr;</div>
     </div>
 
-    <!-- CONTROL SUAVE RATÓN + TÁCTIL MÓVIL -->
     <script>
         const video = document.getElementById('heroVideo');
         video.pause();
@@ -247,6 +253,8 @@
         let isSeeking = false;
         let userInteracted = false;
         let autoDirection = 1;
+        let touchStartX = 0;
+        let touchStartProgress = 0;
 
         function setProgressFromClientX(clientX) {
             if (!video.duration || isNaN(video.duration)) return;
@@ -260,24 +268,35 @@
             setProgressFromClientX(e.clientX);
         }, { passive: true });
 
-        // Control móvil (dedo)
+        // Desbloquear decodificador de vídeo en iOS/Android al primer toque
+        function primeMobileVideo() {
+            video.play().then(() => video.pause()).catch(() => {});
+        }
+
+        // Control móvil (arrastre relativo sensible con el dedo)
         window.addEventListener('touchstart', (e) => {
             if (e.target.closest('.main-nav')) return;
-            if (e.touches.length > 0) {
-                setProgressFromClientX(e.touches[0].clientX);
+            primeMobileVideo();
+            if (e.touches.length > 0 && video.duration) {
+                userInteracted = true;
+                touchStartX = e.touches[0].clientX;
+                touchStartProgress = currentTime / video.duration;
             }
         }, { passive: true });
 
         window.addEventListener('touchmove', (e) => {
             if (e.target.closest('.main-nav')) return;
-            if (e.touches.length > 0) {
-                setProgressFromClientX(e.touches[0].clientX);
+            if (e.touches.length > 0 && video.duration) {
+                userInteracted = true;
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const deltaProgress = (deltaX / window.innerWidth) * 1.45;
+                const newProgress = Math.max(0, Math.min(touchStartProgress + deltaProgress, 1));
+                targetTime = newProgress * video.duration;
             }
         }, { passive: true });
 
         function updateVideoScrub() {
             if (video.duration && !isNaN(video.duration)) {
-                // En móvil, avance automático suave hasta que el usuario toque la pantalla
                 if (!userInteracted && window.innerWidth <= 768) {
                     targetTime += 0.016 * autoDirection;
                     if (targetTime >= video.duration - 0.1) {
@@ -289,15 +308,12 @@
                     }
                 }
 
-                currentTime += (targetTime - currentTime) * 0.12;
+                const easeFactor = window.innerWidth <= 768 ? 0.22 : 0.12;
+                currentTime += (targetTime - currentTime) * easeFactor;
 
-                if (Math.abs(video.currentTime - currentTime) > 0.03 && !isSeeking) {
+                if (Math.abs(video.currentTime - currentTime) > 0.02 && !isSeeking) {
                     isSeeking = true;
-                    if ('fastSeek' in video) {
-                        video.fastSeek(currentTime);
-                    } else {
-                        video.currentTime = currentTime;
-                    }
+                    video.currentTime = currentTime;
                 }
             }
 
@@ -309,7 +325,7 @@
         });
 
         video.addEventListener('loadedmetadata', () => {
-            video.currentTime = 0;
+            video.currentTime = 0.01;
             requestAnimationFrame(updateVideoScrub);
         });
 

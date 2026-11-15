@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fran Rochas | A.I. Filmmaker</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -24,6 +23,12 @@
             color: #ffffff;
             font-family: 'Space Grotesk', sans-serif;
             overflow-x: hidden;
+        }
+
+        iframe[src*="netlify"],
+        #netlify-identity-widget,
+        [data-netlify-deploy-id] {
+            display: none !important;
         }
 
         /* TOP NAVIGATION */
@@ -61,6 +66,7 @@
             text-transform: uppercase;
             color: #ffffff;
             background: transparent;
+            white-space: nowrap;
         }
 
         .main-nav a span {
@@ -108,7 +114,6 @@
             opacity: 0;
         }
 
-        /* 1. FRONT LAYER: CHOOSE YOUR PROMPT */
         .floating-prompt-text {
             position: absolute;
             top: 0;
@@ -133,7 +138,6 @@
             100% { transform: translate3d(54vw, 15vh, 0) rotate(3deg); }
         }
 
-        /* 2. BACK LAYER: KEYWORDS CROSSING BEHIND */
         .floating-keywords-text {
             position: absolute;
             top: 0;
@@ -170,7 +174,6 @@
             z-index: 10;
         }
 
-        /* MOSAIC CELL */
         .mosaic-cell {
             position: relative;
             width: 100%;
@@ -187,7 +190,6 @@
             overflow: hidden;
         }
 
-        /* BASE IMAGE: SUBTLE NEGATIVE IN DEFAULT STATE */
         .cell-img {
             position: absolute;
             top: 0;
@@ -205,7 +207,6 @@
             transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease, opacity 0.35s ease, mix-blend-mode 0.35s ease;
         }
 
-        /* PLAY BADGE ON VIDEO CELLS */
         .video-trigger .play-indicator {
             position: absolute;
             top: 20px;
@@ -229,7 +230,6 @@
             transform: translateY(0);
         }
 
-        /* SPECIFIC CROPS */
         .crop-alone {
             transform: scale(1.52) translateY(4%) !important;
             object-position: 50% 60% !important;
@@ -240,7 +240,6 @@
             object-position: 50% 50% !important;
         }
 
-        /* LAYER 1: HEAVY ANALOG XEROX NOISE */
         .cell-media-wrap::before {
             content: '';
             position: absolute;
@@ -253,7 +252,6 @@
             transition: opacity 0.35s ease;
         }
 
-        /* LAYER 2: CRT SCANLINES */
         .cell-media-wrap::after {
             content: '';
             position: absolute;
@@ -266,7 +264,6 @@
             transition: opacity 0.35s ease;
         }
 
-        /* BASE DUOTONE COLOR LAYER */
         .mosaic-cell .color-layer {
             position: absolute;
             inset: 0;
@@ -275,7 +272,6 @@
             transition: opacity 0.35s ease;
         }
 
-        /* DUOTONE PALETTES */
         .duo-pink-blue .color-layer { background: linear-gradient(135deg, #101c7a 0%, #ff0077 100%); }
         .duo-cyan-blue .color-layer { background: linear-gradient(135deg, #051447 0%, #00eaff 100%); }
         .duo-lime-navy .color-layer { background: linear-gradient(135deg, #041f38 0%, #39ff14 100%); }
@@ -283,7 +279,6 @@
         .duo-yellow-blue .color-layer { background: linear-gradient(135deg, #071747 0%, #fffb00 100%); }
         .duo-red-teal .color-layer { background: linear-gradient(135deg, #032b27 0%, #ff1100 100%); }
 
-        /* HOVER TITLES */
         .hover-info {
             position: absolute;
             bottom: 20px;
@@ -306,7 +301,6 @@
             text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
         }
 
-        /* HOVER INTERACTIONS */
         .mosaic-cell:hover .cell-img {
             filter: none !important;
             mix-blend-mode: normal !important;
@@ -498,7 +492,6 @@
             transition: width 0.1s linear;
         }
 
-        /* IMAGE LIGHTBOX MODAL */
         .cinema-lightbox {
             position: fixed;
             top: 0;
@@ -558,35 +551,103 @@
             text-transform: uppercase;
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 768px) {
+            .main-nav {
+                padding: 18px 10px 12px 10px;
+            }
+
+            .main-nav ul {
+                flex-wrap: wrap;
+                gap: 6px 8px;
+                max-width: 100%;
+            }
+
+            .main-nav a {
+                font-size: 0.66rem;
+                letter-spacing: 1.5px;
+                padding: 5px 8px;
+            }
+
             .strasser-mosaic-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .terminal-deck {
                 grid-template-columns: 1fr;
-                grid-template-rows: 65vh 35vh;
+                padding-top: 84px;
             }
+
+            .floating-prompt-text {
+                font-size: 2rem;
+            }
+
+            .floating-keywords-text {
+                white-space: normal;
+                max-width: 82vw;
+                font-size: 0.68rem;
+                line-height: 1.35;
+            }
+
+            @keyframes oppositeDiagonalLoop {
+                0% { transform: translate3d(8vw, 72vh, 0) rotate(2deg); }
+                50% { transform: translate3d(10vw, 22vh, 0) rotate(-2deg); }
+                100% { transform: translate3d(6vw, 62vh, 0) rotate(2deg); }
+            }
+
+            .video-trigger .play-indicator,
+            .hover-info {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .terminal-deck {
+                display: flex;
+                flex-direction: column;
+                height: 100dvh;
+            }
+
             .deck-screen-zone {
-                height: 65vh;
+                width: 100%;
+                height: 46dvh;
+                flex-shrink: 0;
                 border-right: none;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             }
-            .deck-control-rack {
-                height: 35vh;
-                padding: 20px;
-            }
-        }
 
-        @media (max-width: 600px) {
-            .strasser-mosaic-grid {
-                grid-template-columns: 1fr;
+            .deck-control-rack {
+                width: 100%;
+                height: 54dvh;
+                flex: 1;
+                padding: 16px 20px 24px 20px;
+                overflow-y: auto;
+                justify-content: space-between;
+            }
+
+            .rack-time-box {
+                margin: 12px 0;
+                padding: 10px 14px;
+            }
+
+            .rack-buttons {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .rack-btn {
+                padding: 12px 12px;
+                font-size: 0.70rem;
+                letter-spacing: 1px;
+            }
+
+            .rack-btn-exit {
+                grid-column: 1 / -1;
+                margin-top: 4px;
+                justify-content: center;
+                gap: 10px;
+                background: rgba(255, 59, 0, 0.12);
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- GLOBAL KINETIC TRACKS -->
     <div class="floating-kinetic-track">
         <div class="floating-keywords-text">
             CRUCIAL, ESSENTIAL, IMMERSE YOURSELF, OVERVIEW, IN SHORT, VIBRANT
@@ -596,7 +657,6 @@
         </div>
     </div>
 
-    <!-- MENÚ SUPERIOR (ORDEN UNIFICADO Y ENLACES ACTIVOS) -->
     <nav class="main-nav">
         <ul>
             <li><a href="index.html"><span>HOME</span></a></li>
@@ -608,11 +668,10 @@
         </ul>
     </nav>
 
-    <!-- MOSAICO DE 20 VÍDEOS (LOS 4 NUEVOS ARRIBA + 16 EXISTENTES) -->
     <main class="strasser-mosaic-grid">
 
-        <!-- 01: BLACK (NUEVO) -->
-        <article class="mosaic-cell duo-orange-purple video-trigger" data-title="BLACK" data-video="BLACK.mov">
+        <!-- 01: BLACK -->
+        <article class="mosaic-cell duo-orange-purple video-trigger" data-title="BLACK" data-video="BLACK.mp4">
             <div class="play-indicator">▶ TERMINAL PLAY</div>
             <div class="color-layer"></div>
             <div class="cell-media-wrap">
@@ -623,8 +682,8 @@
             </div>
         </article>
 
-        <!-- 02: FE (NUEVO) -->
-        <article class="mosaic-cell duo-lime-navy video-trigger" data-title="FE" data-video="FE(1).mov">
+        <!-- 02: FE -->
+        <article class="mosaic-cell duo-lime-navy video-trigger" data-title="FE" data-video="FE(1).mp4">
             <div class="play-indicator">▶ TERMINAL PLAY</div>
             <div class="color-layer"></div>
             <div class="cell-media-wrap">
@@ -635,7 +694,7 @@
             </div>
         </article>
 
-        <!-- 03: IF YOU CAN IMAGINE (NUEVO) -->
+        <!-- 03: IF YOU CAN IMAGINE -->
         <article class="mosaic-cell duo-yellow-blue video-trigger" data-title="IF YOU CAN IMAGINE" data-video="IF YOU CAN IMAGINE.mp4">
             <div class="play-indicator">▶ TERMINAL PLAY</div>
             <div class="color-layer"></div>
@@ -647,8 +706,8 @@
             </div>
         </article>
 
-        <!-- 04: SHERISE (NUEVO) -->
-        <article class="mosaic-cell duo-red-teal video-trigger" data-title="SHERISE" data-video="SheRise.mov">
+        <!-- 04: SHERISE -->
+        <article class="mosaic-cell duo-red-teal video-trigger" data-title="SHERISE" data-video="SheRise.mp4">
             <div class="play-indicator">▶ TERMINAL PLAY</div>
             <div class="color-layer"></div>
             <div class="cell-media-wrap">
@@ -857,7 +916,7 @@
     <div class="terminal-deck" id="terminal-deck">
         <div class="deck-screen-zone">
             <div class="deck-crt-mesh"></div>
-            <video class="deck-video" id="deck-video" playsinline preload="metadata">
+            <video class="deck-video" id="deck-video" playsinline webkit-playsinline preload="auto" controls>
                 <source src="" id="deck-video-source" type="video/mp4">
             </video>
         </div>
@@ -887,18 +946,16 @@
                     <span id="btn-mute-state">ON</span>
                 </button>
                 <button class="rack-btn" id="btn-restart">
-                    <span>RESTART REEL</span>
+                    <span>RESTART</span>
                     <span>↺</span>
                 </button>
                 <button class="rack-btn rack-btn-exit" id="btn-deck-close">
-                    <span>EXIT DECK</span>
-                    <span>[ESC]</span>
+                    <span>&larr; BACK / EXIT DECK</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- IMAGE LIGHTBOX MODAL -->
     <div class="cinema-lightbox" id="lightbox">
         <div class="lightbox-wrapper">
             <button class="lightbox-close" id="lightbox-close">✕ CLOSE</button>
@@ -944,7 +1001,7 @@
                 if (videoSrc) {
                     deckTitleText.textContent = title;
                     deckVideoSource.src = encodeURI(videoSrc);
-                    deckVideoSource.type = videoSrc.toLowerCase().endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
+                    deckVideoSource.type = 'video/mp4';
                     deckVideo.load();
 
                     document.body.classList.add('terminal-active');
