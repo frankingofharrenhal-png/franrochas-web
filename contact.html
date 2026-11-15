@@ -111,25 +111,52 @@
             </div>
         </header>
 
-        <form class="minimal-form" action="mailto:hola@franrochas.com" method="POST" enctype="text/plain">
+        <form class="minimal-form" id="contactForm" name="contacto-web" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="contacto-web">
+            <p style="display:none;"><label>No rellenar: <input name="bot-field"></label></p>
             <div class="form-row">
                 <div class="input-group">
-                    <input type="text" class="minimal-input" name="nombre" placeholder="Nombre *" required>
+                    <input type="text" class="minimal-input" name="Nombre" placeholder="Nombre *" required>
                 </div>
                 <div class="input-group">
-                    <input type="email" class="minimal-input" name="email" placeholder="Email *" required>
+                    <input type="email" class="minimal-input" name="Email" placeholder="Email *" required>
                 </div>
             </div>
             <div class="input-group">
-                <input type="text" class="minimal-input" name="asunto" placeholder="Asunto">
+                <input type="text" class="minimal-input" name="Asunto" placeholder="Asunto">
             </div>
             <div class="input-group">
-                <textarea class="minimal-textarea" name="mensaje" placeholder="Mensaje *" required></textarea>
+                <textarea class="minimal-textarea" name="Mensaje" placeholder="Mensaje *" required></textarea>
             </div>
             <div class="form-action">
-                <button type="submit" class="btn-minimal">ENVIAR &rarr;</button>
+                <span class="form-status" id="formStatus" style="font-family:'Space Mono',monospace;font-size:0.78rem;letter-spacing:1.5px;color:#00ff41;text-transform:uppercase;"></span>
+                <button type="submit" class="btn-minimal" id="submitBtn">ENVIAR &rarr;</button>
             </div>
         </form>
+        <script>
+            const form = document.getElementById('contactForm');
+            const statusEl = document.getElementById('formStatus');
+            const submitBtn = document.getElementById('submitBtn');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'ENVIANDO...';
+                try {
+                    await fetch('/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams(new FormData(form)).toString()
+                    });
+                    form.reset();
+                    statusEl.textContent = 'MENSAJE ENVIADO CORRECTAMENTE.';
+                } catch (err) {
+                    statusEl.style.color = '#ff3b00';
+                    statusEl.textContent = 'ERROR AL ENVIAR. ESCRIBE A HOLA@FRANROCHAS.COM';
+                }
+                submitBtn.textContent = 'ENVIAR →';
+                submitBtn.disabled = false;
+            });
+        </script>
     </main>
 </body>
 </html>

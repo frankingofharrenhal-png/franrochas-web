@@ -710,6 +710,7 @@
             });
         }
         applyResponsiveImages();
+            if (typeof adjustSphereForViewport === 'function') adjustSphereForViewport();
 
         const container = document.getElementById('scroll-container');
         const indicatorContainer = document.getElementById('slide-indicator');
@@ -764,7 +765,8 @@
             emissiveIntensity: 0.45
         });
         const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-        sphereMesh.position.y = 1.6;
+        function adjustSphereForViewport() { if (window.innerWidth <= 768) { sphereMesh.scale.setScalar(0.56); sphereMesh.position.set(0, 1.55, 0); } else { sphereMesh.scale.setScalar(1); sphereMesh.position.set(0, 1.6, 0); } }
+        adjustSphereForViewport();
         sceneSphere.add(sphereMesh);
 
         const wireGeo = new THREE.WireframeGeometry(sphereGeo);
@@ -802,6 +804,7 @@
 
         window.addEventListener('resize', () => {
             applyResponsiveImages();
+            if (typeof adjustSphereForViewport === 'function') adjustSphereForViewport();
             cameraSphere.aspect = window.innerWidth / window.innerHeight;
             cameraSphere.updateProjectionMatrix();
             rendererSphere.setSize(window.innerWidth, window.innerHeight);
