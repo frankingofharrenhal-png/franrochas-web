@@ -400,38 +400,68 @@
     
         
         
+        
         /* OVERRIDE DEFINITIVO CARA MOVIL */
-        #face-reel-zone {
-            position: fixed !important;
-            z-index: 9999 !important;
-            transform: translate(-50%, -50%) !important;
-            overflow: hidden !important;
-        }
-        #face-pixel-canvas {
-            position: absolute !important;
-            inset: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-        }
         @media screen and (max-width: 768px) {
             video:not(#reel-video-player) {
                 object-position: 70% 50% !important;
             }
-            #face-reel-zone {
+        }
+        #fr-face-reel-btn {
+            position: fixed !important;
+            left: 50% !important;
+            top: 42% !important;
+            width: 145px !important;
+            height: 145px !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 2147483000 !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            user-select: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        #fr-face-canvas {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none !important;
+        }
+        #fr-face-text {
+            position: relative !important;
+            z-index: 2 !important;
+            color: #ffffff !important;
+            font-family: 'Space Mono', 'Courier New', monospace !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.28em !important;
+            padding-left: 0.28em !important;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95) !important;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none !important;
+        }
+        #fr-face-reel-btn.is-active #fr-face-canvas,
+        #fr-face-reel-btn.is-active #fr-face-text {
+            opacity: 1 !important;
+        }
+        @media screen and (max-width: 768px) {
+            #fr-face-reel-btn {
                 left: 84% !important;
                 top: 28.5% !important;
                 width: 110px !important;
                 height: 110px !important;
-                max-width: 110px !important;
-                max-height: 110px !important;
-                opacity: 1 !important;
-                display: flex !important;
-                pointer-events: auto !important;
             }
-            #face-pixel-canvas,
-            #face-reel-label {
+            #fr-face-reel-btn #fr-face-canvas,
+            #fr-face-reel-btn #fr-face-text {
                 opacity: 1 !important;
-                visibility: visible !important;
             }
         }
 
@@ -557,27 +587,7 @@
 
 
     <!-- ZONA INTERACTIVA SOBRE LA CARA -->
-    <div id="face-reel-zone" role="button" tabindex="0" aria-label="Ver Showreel 2027">
-        <canvas id="face-pixel-canvas"></canvas>
-        <span id="face-reel-label">REEL</span>
-    </div>
-
-    <!-- REPRODUCTOR MODAL REEL 2027 -->
-    <div id="reel-modal" aria-hidden="true">
-        <button id="close-reel-btn" type="button">[ &times; CERRAR ]</button>
-        <div id="reel-stage">
-            <video id="reel-video-player" playsinline preload="metadata">
-                <source src="REEL_2027.mp4" type="video/mp4">
-            </video>
-            <canvas id="reel-transition-canvas"></canvas>
-        </div>
-        <div id="reel-hud">
-            <button id="reel-play-toggle" type="button">PAUSE</button>
-            <span id="reel-timecode">00:00 / 00:00</span>
-            <div id="reel-progress-wrap">
-                <div id="reel-progress-track">
-                    <div id="reel-progress-fill"></div>
-                </div>
+    
             </div>
             <button id="reel-mute-toggle" type="button">SOUND ON</button>
         </div>
@@ -931,6 +941,130 @@
             });
         })();
     </script>
+
+
+    <!-- WIDGET AUTONOMO CARA REEL -->
+    <div id="fr-face-reel-btn" role="button" aria-label="Play Reel">
+        <canvas id="fr-face-canvas"></canvas>
+        <span id="fr-face-text">REEL</span>
+    </div>
+    <script>
+    (function() {
+        const btn = document.getElementById('fr-face-reel-btn');
+        const canvas = document.getElementById('fr-face-canvas');
+        if (!btn || !canvas) return;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const off = document.createElement('canvas');
+        const offCtx = off.getContext('2d', { willReadFrequently: true });
+
+        let hovered = false;
+        const fallbackTones = [
+            [148, 112, 95], [116, 86, 74], [178, 140, 120],
+            [72, 56, 50], [44, 38, 38], [198, 164, 142]
+        ];
+
+        function drawFrame(ts) {
+            const isMobile = window.innerWidth <= 768;
+            if (hovered || isMobile) {
+                const rect = btn.getBoundingClientRect();
+                const w = Math.max(10, Math.round(rect.width));
+                const h = Math.max(10, Math.round(rect.height));
+                if (canvas.width !== w || canvas.height !== h) {
+                    canvas.width = w;
+                    canvas.height = h;
+                }
+
+                const pulse = (Math.sin(ts * 0.0055) + 1) * 0.5;
+                const block = Math.round(14 + pulse * 10);
+                const cols = Math.max(4, Math.floor(w / block));
+                const rows = Math.max(4, Math.floor(h / block));
+                off.width = cols;
+                off.height = rows;
+
+                const bgVid = document.querySelector('video:not(#reel-video-player)');
+                let sampled = false;
+
+                if (bgVid && bgVid.readyState >= 2 && bgVid.videoWidth > 0) {
+                    try {
+                        const vw = bgVid.videoWidth;
+                        const vh = bgVid.videoHeight;
+                        const winW = window.innerWidth;
+                        const winH = window.innerHeight;
+                        const scale = Math.max(winW / vw, winH / vh);
+                        const rW = vw * scale;
+                        const rH = vh * scale;
+                        const fx = isMobile ? 0.70 : 0.5;
+                        const ox = (winW - rW) * fx;
+                        const oy = (winH - rH) * 0.5;
+
+                        const sx = Math.max(0, (rect.left - ox) / scale);
+                        const sy = Math.max(0, (rect.top - oy) / scale);
+                        const sw = Math.min(vw - sx, w / scale);
+                        const sh = Math.min(vh - sy, h / scale);
+
+                        offCtx.drawImage(bgVid, sx, sy, sw, sh, 0, 0, cols, rows);
+                        const img = offCtx.getImageData(0, 0, cols, rows);
+                        const d = img.data;
+                        for (let i = 0; i < d.length; i += 4) {
+                            const j = Math.sin(ts * 0.01 + i) * 14;
+                            d[i] = Math.min(255, Math.max(0, d[i] + j));
+                            d[i + 1] = Math.min(255, Math.max(0, d[i + 1] + j));
+                            d[i + 2] = Math.min(255, Math.max(0, d[i + 2] + j));
+                        }
+                        offCtx.putImageData(img, 0, 0);
+                        ctx.imageSmoothingEnabled = false;
+                        ctx.clearRect(0, 0, w, h);
+                        ctx.drawImage(off, 0, 0, cols, rows, 0, 0, w, h);
+                        sampled = true;
+                    } catch (e) {}
+                }
+
+                if (!sampled) {
+                    ctx.clearRect(0, 0, w, h);
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            const idx = (r * 7 + c * 3 + Math.floor(ts * 0.004)) % fallbackTones.length;
+                            const t = fallbackTones[idx];
+                            ctx.fillStyle = `rgb(${t[0]},${t[1]},${t[2]})`;
+                            ctx.fillRect(c * block, r * block, block, block);
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(drawFrame);
+        }
+
+        btn.addEventListener('mouseenter', () => {
+            hovered = true;
+            btn.classList.add('is-active');
+        });
+        btn.addEventListener('mouseleave', () => {
+            hovered = false;
+            btn.classList.remove('is-active');
+        });
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.openReelModal === 'function') {
+                window.openReelModal();
+            } else {
+                const modal = document.getElementById('reel-modal');
+                const player = document.getElementById('reel-video-player');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    modal.classList.add('active');
+                }
+                if (player) {
+                    player.currentTime = 0;
+                    player.play().catch(() => {});
+                }
+            }
+        });
+
+        requestAnimationFrame(drawFrame);
+    })();
+    </script>
+    <!-- FIN WIDGET AUTONOMO CARA REEL -->
 
 </body>
 </html>
