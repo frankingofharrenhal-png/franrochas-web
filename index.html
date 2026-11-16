@@ -1085,5 +1085,108 @@
     </script>
     <!-- FIN WIDGET AUTONOMO CARA REEL -->
 
+
+    <!-- MODAL REPRODUCTOR REEL 2027 -->
+    <div id="fr-reel-lightbox" style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:#000000; z-index:2147483647; align-items:center; justify-content:center; flex-direction:column;">
+        <canvas id="fr-reel-trans-canvas" style="position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;"></canvas>
+        <button id="fr-reel-close" aria-label="Cerrar Reel" style="position:fixed; top:20px; right:22px; z-index:4; background:rgba(0,0,0,0.6); color:#ffffff; border:1px solid rgba(255,255,255,0.25); width:42px; height:42px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+        <video id="fr-reel-player" src="REEL_2027.mp4" playsinline controls preload="metadata" style="width:100%; height:100%; max-width:100vw; max-height:100vh; object-fit:contain; background:#000000; z-index:2;"></video>
+    </div>
+    <script>
+    (function() {
+        const btn = document.getElementById('fr-face-reel-btn');
+        const box = document.getElementById('fr-reel-lightbox');
+        const vid = document.getElementById('fr-reel-player');
+        const closeBtn = document.getElementById('fr-reel-close');
+        const tCanvas = document.getElementById('fr-reel-trans-canvas');
+        if (!btn || !box || !vid || !closeBtn || !tCanvas) return;
+        const tCtx = tCanvas.getContext('2d');
+
+        const goldPalette = ['#D4AF37', '#B8860B', '#F3E5AB', '#8B6508', '#1A1405', '#E5C158'];
+
+        function playPixelWipe(mode, onDone) {
+            tCanvas.width = window.innerWidth;
+            tCanvas.height = window.innerHeight;
+            tCanvas.style.display = 'block';
+            const size = window.innerWidth <= 768 ? 28 : 42;
+            const cols = Math.ceil(tCanvas.width / size);
+            const rows = Math.ceil(tCanvas.height / size);
+            const cells = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    cells.push({
+                        x: c * size,
+                        y: r * size,
+                        color: goldPalette[(r * 7 + c * 13) % goldPalette.length],
+                        order: Math.random()
+                    });
+                }
+            }
+            const duration = 420;
+            const start = performance.now();
+            function step(now) {
+                const p = Math.min(1, (now - start) / duration);
+                tCtx.clearRect(0, 0, tCanvas.width, tCanvas.height);
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    const visible = mode === 'open' ? (p < 1 - cell.order * 0.85) : (p > cell.order * 0.85);
+                    if (visible) {
+                        tCtx.fillStyle = cell.color;
+                        tCtx.fillRect(cell.x, cell.y, size + 1, size + 1);
+                    }
+                }
+                if (p < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    tCtx.clearRect(0, 0, tCanvas.width, tCanvas.height);
+                    tCanvas.style.display = 'none';
+                    if (onDone) onDone();
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function launchReel(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }
+            const bgVid = document.querySelector('video:not(#fr-reel-player)');
+            if (bgVid) bgVid.pause();
+
+            box.style.display = 'flex';
+            vid.currentTime = 0;
+            vid.muted = false;
+            vid.play().catch(() => {
+                vid.muted = true;
+                vid.play().catch(() => {});
+            });
+            playPixelWipe('open');
+        }
+
+        function closeReel(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            vid.pause();
+            playPixelWipe('close', () => {
+                box.style.display = 'none';
+                const bgVid = document.querySelector('video:not(#fr-reel-player)');
+                if (bgVid) bgVid.play().catch(() => {});
+            });
+        }
+
+        btn.addEventListener('click', launchReel, true);
+        btn.addEventListener('touchend', launchReel, { capture: true, passive: false });
+        closeBtn.addEventListener('click', closeReel, true);
+        document.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Escape' && box.style.display === 'flex') closeReel();
+        });
+    })();
+    </script>
+    <!-- FIN MODAL REPRODUCTOR REEL 2027 -->
+
 </body>
 </html>
