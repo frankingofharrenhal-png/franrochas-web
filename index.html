@@ -399,9 +399,19 @@
 
     
         
+        
         /* OVERRIDE DEFINITIVO CARA MOVIL */
         #face-reel-zone {
-            z-index: 999 !important;
+            position: fixed !important;
+            z-index: 9999 !important;
+            transform: translate(-50%, -50%) !important;
+            overflow: hidden !important;
+        }
+        #face-pixel-canvas {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
         }
         @media screen and (max-width: 768px) {
             video:not(#reel-video-player) {
@@ -412,12 +422,16 @@
                 top: 28.5% !important;
                 width: 110px !important;
                 height: 110px !important;
+                max-width: 110px !important;
+                max-height: 110px !important;
                 opacity: 1 !important;
                 display: flex !important;
+                pointer-events: auto !important;
             }
             #face-pixel-canvas,
             #face-reel-label {
                 opacity: 1 !important;
+                visibility: visible !important;
             }
         }
 
@@ -614,7 +628,10 @@
             }
 
             function renderAnimatedPixels(timestamp) {
-                if (!isHovered && window.innerWidth > 768) return;
+                if (!isHovered && window.innerWidth > 768) {
+                    animId = null;
+                    return;
+                }
 
                 const rect = zone.getBoundingClientRect();
                 if (rect.width === 0 || rect.height === 0) {
