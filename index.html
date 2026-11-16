@@ -416,7 +416,7 @@
             transform: translate(-50%, -50%) !important;
             z-index: 2147483000 !important;
             cursor: pointer !important;
-            display: flex !important;
+            display: none;
             align-items: center !important;
             justify-content: center !important;
             user-select: none !important;
@@ -438,12 +438,12 @@
             position: relative !important;
             z-index: 2 !important;
             color: #ffffff !important;
-            font-family: 'Space Mono', 'Courier New', monospace !important;
+            font-family: 'Syne', 'Helvetica Neue', Arial, sans-serif !important;
             font-size: 13px !important;
-            font-weight: 700 !important;
-            letter-spacing: 0.28em !important;
-            padding-left: 0.28em !important;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95) !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.32em !important;
+            padding-left: 0.32em !important;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9) !important;
             opacity: 0;
             transition: opacity 0.25s ease;
             pointer-events: none !important;
@@ -944,7 +944,7 @@
 
 
     <!-- WIDGET AUTONOMO CARA REEL -->
-    <div id="fr-face-reel-btn" role="button" aria-label="Play Reel">
+    <div id="fr-face-reel-btn" role="button" aria-label="Play Reel" style="display:none;">
         <canvas id="fr-face-canvas"></canvas>
         <span id="fr-face-text">REEL</span>
     </div>
@@ -958,12 +958,28 @@
         const offCtx = off.getContext('2d', { willReadFrequently: true });
 
         let hovered = false;
-        const fallbackTones = [
-            [148, 112, 95], [116, 86, 74], [178, 140, 120],
-            [72, 56, 50], [44, 38, 38], [198, 164, 142]
-        ];
+        let videoReady = false;
+
+        function getBgVideo() {
+            return document.querySelector('video:not(#reel-video-player)');
+        }
 
         function drawFrame(ts) {
+            const bgVid = getBgVideo();
+            if (!bgVid || bgVid.readyState < 2 || bgVid.videoWidth === 0 || bgVid.paused) {
+                if (videoReady) {
+                    btn.style.display = 'none';
+                    videoReady = false;
+                }
+                requestAnimationFrame(drawFrame);
+                return;
+            }
+
+            if (!videoReady) {
+                btn.style.display = 'flex';
+                videoReady = true;
+            }
+
             const isMobile = window.innerWidth <= 768;
             if (hovered || isMobile) {
                 const rect = btn.getBoundingClientRect();
@@ -974,62 +990,45 @@
                     canvas.height = h;
                 }
 
-                const pulse = (Math.sin(ts * 0.0055) + 1) * 0.5;
-                const block = Math.round(14 + pulse * 10);
+                // Ritmo suave y orgánico idéntico al original
+                const pulse = (Math.sin(ts * 0.0032) + 1) * 0.5;
+                const block = Math.round(14 + pulse * 6);
                 const cols = Math.max(4, Math.floor(w / block));
                 const rows = Math.max(4, Math.floor(h / block));
                 off.width = cols;
                 off.height = rows;
 
-                const bgVid = document.querySelector('video:not(#reel-video-player)');
-                let sampled = false;
+                try {
+                    const vw = bgVid.videoWidth;
+                    const vh = bgVid.videoHeight;
+                    const winW = window.innerWidth;
+                    const winH = window.innerHeight;
+                    const scale = Math.max(winW / vw, winH / vh);
+                    const rW = vw * scale;
+                    const rH = vh * scale;
+                    const fx = isMobile ? 0.70 : 0.5;
+                    const ox = (winW - rW) * fx;
+                    const oy = (winH - rH) * 0.5;
 
-                if (bgVid && bgVid.readyState >= 2 && bgVid.videoWidth > 0) {
-                    try {
-                        const vw = bgVid.videoWidth;
-                        const vh = bgVid.videoHeight;
-                        const winW = window.innerWidth;
-                        const winH = window.innerHeight;
-                        const scale = Math.max(winW / vw, winH / vh);
-                        const rW = vw * scale;
-                        const rH = vh * scale;
-                        const fx = isMobile ? 0.70 : 0.5;
-                        const ox = (winW - rW) * fx;
-                        const oy = (winH - rH) * 0.5;
+                    const sx = Math.max(0, (rect.left - ox) / scale);
+                    const sy = Math.max(0, (rect.top - oy) / scale);
+                    const sw = Math.min(vw - sx, w / scale);
+                    const sh = Math.min(vh - sy, h / scale);
 
-                        const sx = Math.max(0, (rect.left - ox) / scale);
-                        const sy = Math.max(0, (rect.top - oy) / scale);
-                        const sw = Math.min(vw - sx, w / scale);
-                        const sh = Math.min(vh - sy, h / scale);
-
-                        offCtx.drawImage(bgVid, sx, sy, sw, sh, 0, 0, cols, rows);
-                        const img = offCtx.getImageData(0, 0, cols, rows);
-                        const d = img.data;
-                        for (let i = 0; i < d.length; i += 4) {
-                            const j = Math.sin(ts * 0.01 + i) * 14;
-                            d[i] = Math.min(255, Math.max(0, d[i] + j));
-                            d[i + 1] = Math.min(255, Math.max(0, d[i + 1] + j));
-                            d[i + 2] = Math.min(255, Math.max(0, d[i + 2] + j));
-                        }
-                        offCtx.putImageData(img, 0, 0);
-                        ctx.imageSmoothingEnabled = false;
-                        ctx.clearRect(0, 0, w, h);
-                        ctx.drawImage(off, 0, 0, cols, rows, 0, 0, w, h);
-                        sampled = true;
-                    } catch (e) {}
-                }
-
-                if (!sampled) {
-                    ctx.clearRect(0, 0, w, h);
-                    for (let r = 0; r < rows; r++) {
-                        for (let c = 0; c < cols; c++) {
-                            const idx = (r * 7 + c * 3 + Math.floor(ts * 0.004)) % fallbackTones.length;
-                            const t = fallbackTones[idx];
-                            ctx.fillStyle = `rgb(${t[0]},${t[1]},${t[2]})`;
-                            ctx.fillRect(c * block, r * block, block, block);
-                        }
+                    offCtx.drawImage(bgVid, sx, sy, sw, sh, 0, 0, cols, rows);
+                    const img = offCtx.getImageData(0, 0, cols, rows);
+                    const d = img.data;
+                    for (let i = 0; i < d.length; i += 4) {
+                        const j = Math.sin(ts * 0.006 + i * 0.25) * 10;
+                        d[i] = Math.min(255, Math.max(0, d[i] + j));
+                        d[i + 1] = Math.min(255, Math.max(0, d[i + 1] + j));
+                        d[i + 2] = Math.min(255, Math.max(0, d[i + 2] + j));
                     }
-                }
+                    offCtx.putImageData(img, 0, 0);
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.clearRect(0, 0, w, h);
+                    ctx.drawImage(off, 0, 0, cols, rows, 0, 0, w, h);
+                } catch (e) {}
             }
             requestAnimationFrame(drawFrame);
         }
@@ -1042,24 +1041,41 @@
             hovered = false;
             btn.classList.remove('is-active');
         });
-        btn.addEventListener('click', (e) => {
+
+        function triggerReelModal(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (typeof window.openReelModal === 'function') {
-                window.openReelModal();
-            } else {
-                const modal = document.getElementById('reel-modal');
-                const player = document.getElementById('reel-video-player');
-                if (modal) {
-                    modal.style.display = 'flex';
-                    modal.classList.add('active');
-                }
-                if (player) {
-                    player.currentTime = 0;
-                    player.play().catch(() => {});
-                }
+
+            // Disparar transición pixelada dorada si existe
+            if (typeof window.runPixelTransition === 'function') {
+                window.runPixelTransition('open');
             }
-        });
+
+            const modal = document.getElementById('reel-modal') || document.querySelector('[id*="reel"][id*="modal"]');
+            const player = document.getElementById('reel-video-player') || (modal ? modal.querySelector('video') : null);
+
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.opacity = '1';
+                modal.style.visibility = 'visible';
+                modal.style.pointerEvents = 'auto';
+                modal.classList.add('active', 'open');
+            }
+            if (player) {
+                if (!player.getAttribute('src')) {
+                    player.setAttribute('src', 'REEL_2027.mp4');
+                }
+                player.currentTime = 0;
+                player.muted = false;
+                player.play().catch(() => {
+                    player.muted = true;
+                    player.play().catch(() => {});
+                });
+            }
+        }
+
+        btn.addEventListener('click', triggerReelModal);
+        btn.addEventListener('touchend', triggerReelModal, { passive: false });
 
         requestAnimationFrame(drawFrame);
     })();
