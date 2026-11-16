@@ -1178,8 +1178,7 @@
             });
         }
 
-        btn.addEventListener('pointerdown', launchReel, true);
-    btn.addEventListener('click', launchReel, true);
+        btn.addEventListener('click', launchReel, true);
         btn.addEventListener('touchend', launchReel, { capture: true, passive: false });
         closeBtn.addEventListener('click', closeReel, true);
         document.addEventListener('keydown', (ev) => {
