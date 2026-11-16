@@ -416,7 +416,6 @@
             transform: translate(-50%, -50%) !important;
             z-index: 2147483000 !important;
             cursor: pointer !important;
-            display: none;
             align-items: center !important;
             justify-content: center !important;
             user-select: none !important;
@@ -958,7 +957,8 @@
         const offCtx = off.getContext('2d', { willReadFrequently: true });
 
         let hovered = false;
-        let videoReady = false;
+        let videoStarted = false;
+        let lastOpenTime = 0;
 
         function getBgVideo() {
             return document.querySelector('video:not(#reel-video-player)');
@@ -966,22 +966,20 @@
 
         function drawFrame(ts) {
             const bgVid = getBgVideo();
-            if (!bgVid || bgVid.readyState < 2 || bgVid.videoWidth === 0 || bgVid.paused) {
-                if (videoReady) {
-                    btn.style.display = 'none';
-                    videoReady = false;
-                }
-                requestAnimationFrame(drawFrame);
-                return;
-            }
 
-            if (!videoReady) {
-                btn.style.display = 'flex';
-                videoReady = true;
+            // Esperar a que el vídeo tenga fotogramas reales antes de mostrar los píxeles
+            if (!videoStarted) {
+                if (bgVid && bgVid.readyState >= 2 && bgVid.videoWidth > 0 && bgVid.currentTime > 0.05) {
+                    videoStarted = true;
+                    btn.style.display = 'flex';
+                } else {
+                    requestAnimationFrame(drawFrame);
+                    return;
+                }
             }
 
             const isMobile = window.innerWidth <= 768;
-            if (hovered || isMobile) {
+            if ((hovered || isMobile) && bgVid && bgVid.readyState >= 2 && bgVid.videoWidth > 0) {
                 const rect = btn.getBoundingClientRect();
                 const w = Math.max(10, Math.round(rect.width));
                 const h = Math.max(10, Math.round(rect.height));
@@ -990,7 +988,6 @@
                     canvas.height = h;
                 }
 
-                // Ritmo suave y orgánico idéntico al original
                 const pulse = (Math.sin(ts * 0.0032) + 1) * 0.5;
                 const block = Math.round(14 + pulse * 6);
                 const cols = Math.max(4, Math.floor(w / block));
@@ -1042,11 +1039,16 @@
             btn.classList.remove('is-active');
         });
 
-        function triggerReelModal(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        function openReelSafely(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }
+            const now = Date.now();
+            if (now - lastOpenTime < 500) return;
+            lastOpenTime = now;
 
-            // Disparar transición pixelada dorada si existe
             if (typeof window.runPixelTransition === 'function') {
                 window.runPixelTransition('open');
             }
@@ -1055,10 +1057,11 @@
             const player = document.getElementById('reel-video-player') || (modal ? modal.querySelector('video') : null);
 
             if (modal) {
-                modal.style.display = 'flex';
-                modal.style.opacity = '1';
-                modal.style.visibility = 'visible';
-                modal.style.pointerEvents = 'auto';
+                modal.style.setProperty('display', 'flex', 'important');
+                modal.style.setProperty('opacity', '1', 'important');
+                modal.style.setProperty('visibility', 'visible', 'important');
+                modal.style.setProperty('pointer-events', 'auto', 'important');
+                modal.style.setProperty('z-index', '2147483645', 'important');
                 modal.classList.add('active', 'open');
             }
             if (player) {
@@ -1074,8 +1077,8 @@
             }
         }
 
-        btn.addEventListener('click', triggerReelModal);
-        btn.addEventListener('touchend', triggerReelModal, { passive: false });
+        btn.addEventListener('pointerdown', openReelSafely, true);
+        btn.addEventListener('click', openReelSafely, true);
 
         requestAnimationFrame(drawFrame);
     })();
