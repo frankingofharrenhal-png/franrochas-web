@@ -398,9 +398,13 @@
         }
 
     
+        
         /* OVERRIDE DEFINITIVO CARA MOVIL */
+        #face-reel-zone {
+            z-index: 999 !important;
+        }
         @media screen and (max-width: 768px) {
-            #heroVideo {
+            video:not(#reel-video-player) {
                 object-position: 70% 50% !important;
             }
             #face-reel-zone {
@@ -408,6 +412,12 @@
                 top: 28.5% !important;
                 width: 110px !important;
                 height: 110px !important;
+                opacity: 1 !important;
+                display: flex !important;
+            }
+            #face-pixel-canvas,
+            #face-reel-label {
+                opacity: 1 !important;
             }
         }
 
@@ -561,7 +571,7 @@
 
     <script>
         (function() {
-            const heroVideo = document.getElementById('heroVideo');
+            const heroVideo = document.getElementById('heroVideo') || document.querySelector('video:not(#reel-video-player)');
             const zone = document.getElementById('face-reel-zone');
             const canvas = document.getElementById('face-pixel-canvas');
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
