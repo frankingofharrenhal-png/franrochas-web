@@ -409,7 +409,7 @@
         }
         #fr-face-reel-btn {
             position: fixed !important;
-            left: 50% !important;
+            left: 71.5% !important;
             top: 42% !important;
             width: 145px !important;
             height: 145px !important;
@@ -1153,7 +1153,7 @@
                 e.stopImmediatePropagation();
             }
             const bgVid = document.querySelector('video:not(#fr-reel-player)');
-            if (bgVid) bgVid.pause();
+            // bgVid intacto sin vibracion
 
             box.style.display = 'flex';
             vid.currentTime = 0;
@@ -1174,11 +1174,12 @@
             playPixelWipe('close', () => {
                 box.style.display = 'none';
                 const bgVid = document.querySelector('video:not(#fr-reel-player)');
-                if (bgVid) bgVid.play().catch(() => {});
+                // bgVid intacto sin vibracion
             });
         }
 
-        btn.addEventListener('click', launchReel, true);
+        btn.addEventListener('pointerdown', launchReel, true);
+    btn.addEventListener('click', launchReel, true);
         btn.addEventListener('touchend', launchReel, { capture: true, passive: false });
         closeBtn.addEventListener('click', closeReel, true);
         document.addEventListener('keydown', (ev) => {
