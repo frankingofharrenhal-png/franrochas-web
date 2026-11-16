@@ -218,8 +218,8 @@
     
         /* DISPARADOR INTERACTIVO PIXELADO SOBRE LA CARA (REEL) */
         #face-reel-zone {
-                left: 82.5% !important;
-                top: 22.5% !important;
+                left: 84% !important;
+                top: 28.5% !important;
                 width: 110px !important;
                 height: 110px !important;
             }
@@ -404,8 +404,8 @@
                 object-position: 70% 50% !important;
             }
             #face-reel-zone {
-                left: 82.5% !important;
-                top: 22.5% !important;
+                left: 84% !important;
+                top: 28.5% !important;
                 width: 110px !important;
                 height: 110px !important;
             }
@@ -607,52 +607,79 @@
                 if (!isHovered && window.innerWidth > 768) return;
 
                 const rect = zone.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) {
+                    animId = requestAnimationFrame(renderAnimatedPixels);
+                    return;
+                }
                 if (canvas.width !== Math.round(rect.width) || canvas.height !== Math.round(rect.height)) {
                     canvas.width = Math.round(rect.width);
                     canvas.height = Math.round(rect.height);
                 }
 
                 const pulse = (Math.sin(timestamp * 0.0055) + 1) * 0.5;
-                const blockSize = Math.round(14 + pulse * 12);
+                const blockSize = Math.round(14 + pulse * 11);
 
                 const cols = Math.max(4, Math.floor(canvas.width / blockSize));
                 const rows = Math.max(4, Math.floor(canvas.height / blockSize));
                 offCanvas.width = cols;
                 offCanvas.height = rows;
 
-                if (heroVideo && heroVideo.readyState >= 2 && heroVideo.videoWidth > 0) {
-                    const vw = heroVideo.videoWidth;
-                    const vh = heroVideo.videoHeight;
-                    const winW = window.innerWidth;
-                    const winH = window.innerHeight;
+                const bgVideo = heroVideo || document.querySelector('video:not(#reel-video-player)');
+                let drewFromVideo = false;
 
-                    const scale = Math.max(winW / vw, winH / vh);
-                    const renderedW = vw * scale;
-                    const renderedH = vh * scale;
-                    const focusX = (winW <= 768) ? 0.70 : 0.5;
-                    const offsetX = (winW - renderedW) * focusX;
-                    const offsetY = (winH - renderedH) * 0.5;
+                if (bgVideo && bgVideo.readyState >= 2 && bgVideo.videoWidth > 0) {
+                    try {
+                        const vw = bgVideo.videoWidth;
+                        const vh = bgVideo.videoHeight;
+                        const winW = window.innerWidth;
+                        const winH = window.innerHeight;
 
-                    const sx = Math.max(0, (rect.left - offsetX) / scale);
-                    const sy = Math.max(0, (rect.top - offsetY) / scale);
-                    const sw = Math.min(vw - sx, rect.width / scale);
-                    const sh = Math.min(vh - sy, rect.height / scale);
+                        const scale = Math.max(winW / vw, winH / vh);
+                        const renderedW = vw * scale;
+                        const renderedH = vh * scale;
+                        const focusX = (winW <= 768) ? 0.70 : 0.5;
+                        const offsetX = (winW - renderedW) * focusX;
+                        const offsetY = (winH - renderedH) * 0.5;
 
-                    offCtx.drawImage(heroVideo, sx, sy, sw, sh, 0, 0, cols, rows);
-                    const imgData = offCtx.getImageData(0, 0, cols, rows);
-                    const data = imgData.data;
+                        const sx = Math.max(0, (rect.left - offsetX) / scale);
+                        const sy = Math.max(0, (rect.top - offsetY) / scale);
+                        const sw = Math.min(vw - sx, rect.width / scale);
+                        const sh = Math.min(vh - sy, rect.height / scale);
 
-                    for (let i = 0; i < data.length; i += 4) {
-                        const jitter = (Math.sin(timestamp * 0.01 + i) * 14);
-                        data[i] = Math.min(255, Math.max(0, data[i] + jitter));
-                        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + jitter));
-                        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + jitter));
-                    }
-                    offCtx.putImageData(imgData, 0, 0);
+                        offCtx.drawImage(bgVideo, sx, sy, sw, sh, 0, 0, cols, rows);
+                        const imgData = offCtx.getImageData(0, 0, cols, rows);
+                        const data = imgData.data;
 
-                    ctx.imageSmoothingEnabled = false;
+                        for (let i = 0; i < data.length; i += 4) {
+                            const jitter = (Math.sin(timestamp * 0.01 + i) * 14);
+                            data[i] = Math.min(255, Math.max(0, data[i] + jitter));
+                            data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + jitter));
+                            data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + jitter));
+                        }
+                        offCtx.putImageData(imgData, 0, 0);
+
+                        ctx.imageSmoothingEnabled = false;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(offCanvas, 0, 0, cols, rows, 0, 0, canvas.width, canvas.height);
+                        drewFromVideo = true;
+                    } catch (e) {}
+                }
+
+                if (!drewFromVideo) {
+                    // Paleta cálida/sombreada real del rostro mientras arranca el vídeo en móvil
+                    const faceTones = [
+                        [142, 108, 92], [112, 84, 72], [174, 138, 118],
+                        [68, 54, 48], [42, 36, 36], [196, 162, 140]
+                    ];
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(offCanvas, 0, 0, cols, rows, 0, 0, canvas.width, canvas.height);
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            const idx = (r * 7 + c * 3 + Math.floor(timestamp * 0.004)) % faceTones.length;
+                            const t = faceTones[idx];
+                            ctx.fillStyle = `rgb(${t[0]}, ${t[1]}, ${t[2]})`;
+                            ctx.fillRect(c * blockSize, r * blockSize, blockSize, blockSize);
+                        }
+                    }
                 }
 
                 animId = requestAnimationFrame(renderAnimatedPixels);
