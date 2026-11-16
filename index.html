@@ -465,6 +465,7 @@
         }
 
     </style>
+<style id="fr-reel-pos-fix">@media (min-width: 769px) { #fr-face-reel-btn { left: 74% !important; top: 25% !important; z-index: 2147483640 !important; pointer-events: auto !important; cursor: pointer !important; } }</style>
 </head>
 <body>
 
@@ -1189,5 +1190,6 @@
     </script>
     <!-- FIN MODAL REPRODUCTOR REEL 2027 -->
 
+<script id="fr-reel-click-fix">(function(){ function openReelDirect(e){ var btn=document.getElementById("fr-face-reel-btn"), box=document.getElementById("fr-reel-lightbox"), vid=document.getElementById("fr-reel-player"); if(!btn||!box||!vid||box.style.display==="flex") return; var r=btn.getBoundingClientRect(); var cx=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX; var cy=(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY; if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); box.style.display="flex"; vid.currentTime=0; vid.muted=false; vid.play().catch(function(){ vid.muted=true; vid.play().catch(function(){}); }); } } window.addEventListener("pointerdown",openReelDirect,true); window.addEventListener("mousedown",openReelDirect,true); window.addEventListener("touchstart",openReelDirect,{capture:true,passive:false}); })();</script>
 </body>
 </html>
